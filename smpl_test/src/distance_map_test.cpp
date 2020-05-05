@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ostream>
 #include <utility>
+#include <random>
 
 #include <smpl/distance_map/euclid_distance_map.h>
 #include <smpl/distance_map/sparse_distance_map.h>
