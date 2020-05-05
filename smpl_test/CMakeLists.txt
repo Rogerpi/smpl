@@ -24,7 +24,7 @@ find_package(catkin
         visualization_msgs)
 
 find_package(orocos_kdl REQUIRED)
-find_package(OMPL REQUIRED)
+find_package(ompl REQUIRED)
 find_package(smpl REQUIRED)
 
 catkin_package()

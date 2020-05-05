@@ -33,6 +33,8 @@
 #include "collision_space_scene.h"
 #include "pr2_allowed_collision_pairs.h"
 
+typedef Eigen::Ref<Eigen::VectorXd> EuclideanProjection;
+
 // Parse environment config file
 auto GetCollisionObjects(
     const std::string& filename,
@@ -397,6 +399,8 @@ auto ConstructStateSpace(
     return ompl::base::StateSpacePtr(concrete_space);
 }
 
+
+
 struct ProjectionEvaluatorFK : public ompl::base::ProjectionEvaluator
 {
     smpl::KDLRobotModel* model = NULL;
@@ -410,13 +414,13 @@ struct ProjectionEvaluatorFK : public ompl::base::ProjectionEvaluator
     auto getDimension() const -> unsigned int override;
     void project(
             const ompl::base::State* state,
-            ompl::base::EuclideanProjection& projection) const override;
+            EuclideanProjection projection) const override;
     void setCellSizes(const std::vector<double>& cell_sizes) override;
     void defaultCellSizes() override;
     void setup() override;
     void printSettings(std::ostream& out = std::cout) const override;
     void printProjection(
-            const ompl::base::EuclideanProjection& projection,
+            const EuclideanProjection& projection,
             std::ostream& out = std::cout) const override;
 };
 
@@ -443,7 +447,7 @@ auto ProjectionEvaluatorFK::getDimension() const -> unsigned int
 
 void ProjectionEvaluatorFK::project(
         const ompl::base::State* state,
-        ompl::base::EuclideanProjection& projection) const
+        EuclideanProjection projection) const
 {
     auto values = smpl::MakeStateSMPL(this->state_space, state);
     auto pose = model->computeFK(values);
@@ -476,7 +480,7 @@ void ProjectionEvaluatorFK::printSettings(std::ostream& out) const
 }
 
 void ProjectionEvaluatorFK::printProjection(
-    const ompl::base::EuclideanProjection& projection, std::ostream& out) const
+    const EuclideanProjection& projection, std::ostream& out) const
 {
     this->Base::printProjection(projection, out);
 }
