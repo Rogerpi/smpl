@@ -401,7 +401,7 @@ void CollisionRobotSBPL::checkSelfCollisionMutable(
     auto state_copy = state;
     state_copy.setJointPositions(
             state_copy.getRobotModel()->getRootJoint(),
-            Eigen::Affine3d::Identity());
+            Eigen::Isometry3d::Identity());
     m_updater.update(state_copy);
 
     double dist;
@@ -484,10 +484,10 @@ void CollisionRobotSBPL::checkSelfCollisionMutable(
     auto state2_copy = state2;
     state1_copy.setJointPositions(
             state1_copy.getRobotModel()->getRootJoint(),
-            Eigen::Affine3d::Identity());
+            Eigen::Isometry3d::Identity());
     state2_copy.setJointPositions(
             state1_copy.getRobotModel()->getRootJoint(),
-            Eigen::Affine3d::Identity());
+            Eigen::Isometry3d::Identity());
 //    m_updater.update(state_copy);
 
     auto startvars = m_updater.getVariablesFor(state1_copy);

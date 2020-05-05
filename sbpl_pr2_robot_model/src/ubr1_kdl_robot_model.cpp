@@ -83,7 +83,7 @@ static void NormalizeAngles(KDLRobotModel* model, KDL::JntArray* q)
 }
 
 bool UBR1KDLRobotModel::computeIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     RobotState& solution,
     ik_option::IkOption option)

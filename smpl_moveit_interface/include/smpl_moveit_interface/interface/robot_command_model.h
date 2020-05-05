@@ -60,7 +60,7 @@ public:
 
     bool setFromIK(
         const moveit::core::JointModelGroup* group,
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         unsigned int attempts = 0,
         double timeout = 0.0,
         const moveit::core::GroupStateValidityCallbackFn& constraint = moveit::core::GroupStateValidityCallbackFn(),
@@ -76,7 +76,7 @@ public:
 
     void setJointPositions(
         const moveit::core::JointModel* joint,
-        const Eigen::Affine3d& joint_transform);
+        const Eigen::Isometry3d& joint_transform);
 
 Q_SIGNALS:
 

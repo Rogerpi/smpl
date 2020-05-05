@@ -98,7 +98,7 @@ static void NormalizeAngles(KDLRobotModel* model, KDL::JntArray* q)
 }
 
 bool PR2KDLRobotModel::computeIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     RobotState& solution,
     ik_option::IkOption option)
@@ -175,7 +175,7 @@ bool PR2KDLRobotModel::computeIK(
 }
 
 bool PR2KDLRobotModel::computeFastIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     RobotState& solution)
 {

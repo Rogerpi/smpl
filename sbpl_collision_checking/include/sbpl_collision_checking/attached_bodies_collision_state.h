@@ -66,8 +66,8 @@ public:
     ///\name Attached Bodies State
     ///@{
     auto attachedBodyTransform(const std::string& link_name) const
-            -> const Eigen::Affine3d&;
-    auto attachedBodyTransform(int abidx) const -> const Eigen::Affine3d&;
+            -> const Eigen::Isometry3d&;
+    auto attachedBodyTransform(int abidx) const -> const Eigen::Isometry3d&;
 
     bool attachedBodyTransformDirty(const std::string& id) const;
     bool attachedBodyTransformDirty(int abidx) const;
@@ -153,7 +153,7 @@ RobotCollisionState* AttachedBodiesCollisionState::state()
 }
 
 inline
-const Eigen::Affine3d& AttachedBodiesCollisionState::attachedBodyTransform(
+const Eigen::Isometry3d& AttachedBodiesCollisionState::attachedBodyTransform(
     const std::string& id) const
 {
     reinitCollisionState();
@@ -163,7 +163,7 @@ const Eigen::Affine3d& AttachedBodiesCollisionState::attachedBodyTransform(
 }
 
 inline
-const Eigen::Affine3d& AttachedBodiesCollisionState::attachedBodyTransform(
+const Eigen::Isometry3d& AttachedBodiesCollisionState::attachedBodyTransform(
     int abidx) const
 {
     reinitCollisionState();

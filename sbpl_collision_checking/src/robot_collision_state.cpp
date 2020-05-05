@@ -246,10 +246,10 @@ void RobotCollisionState::initRobotState()
     }
 
     m_dirty_joint_transforms.assign(m_model->jointCount(), true);
-    m_joint_transforms.assign(m_model->jointCount(), Eigen::Affine3d::Identity());
+    m_joint_transforms.assign(m_model->jointCount(), Eigen::Isometry3d::Identity());
 
     m_dirty_link_transforms.assign(m_model->linkCount(), true);
-    m_link_transforms.assign(m_model->linkCount(), Eigen::Affine3d::Identity());
+    m_link_transforms.assign(m_model->linkCount(), Eigen::Isometry3d::Identity());
     m_link_transform_versions.assign(m_model->linkCount(), -1);
     m_dirty_link_transforms[0] = false;
     m_link_transform_versions[0] = 0;

@@ -43,48 +43,48 @@ namespace collision {
 // Compute*JointTransform Definitions //
 ////////////////////////////////////////
 
-Eigen::Affine3d ComputeRevoluteJointTransform(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeRevoluteJointTransform(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputeRevoluteJointTransformX(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeRevoluteJointTransformX(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputeRevoluteJointTransformY(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeRevoluteJointTransformY(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputeRevoluteJointTransformZ(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeRevoluteJointTransformZ(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputeContinuousJointTransform(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeContinuousJointTransform(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputePrismaticJointTransform(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputePrismaticJointTransform(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputeFloatingJointTransform(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeFloatingJointTransform(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputePlanarJointTransform(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputePlanarJointTransform(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
-Eigen::Affine3d ComputeFixedJointTransform(
-    const Eigen::Affine3d& origin,
+Eigen::Isometry3d ComputeFixedJointTransform(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
@@ -93,8 +93,8 @@ Eigen::Affine3d ComputeFixedJointTransform(
 ////////////////////////////////////////
 
 inline
-Eigen::Affine3d ComputeRevoluteJointTransform(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeRevoluteJointTransform(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -102,13 +102,13 @@ Eigen::Affine3d ComputeRevoluteJointTransform(
 }
 
 inline
-Eigen::Affine3d ComputeRevoluteJointTransformX(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeRevoluteJointTransformX(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
 #if SBPL_COLLISION_SPECIALIZED_JOINT_TRANSFORMS
-    Eigen::Transform<double, 3, Eigen::Affine> t;
+    Eigen::Transform<double, 3, Eigen::Isometry> t;
     double cth = cos(jvals[0]);
     double sth = sin(jvals[0]);
     t(0,0) = o(0,0);
@@ -137,13 +137,13 @@ Eigen::Affine3d ComputeRevoluteJointTransformX(
 }
 
 inline
-Eigen::Affine3d ComputeRevoluteJointTransformY(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeRevoluteJointTransformY(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
 #if SBPL_COLLISION_SPECIALIZED_JOINT_TRANSFORMS
-    Eigen::Transform<double, 3, Eigen::Affine> t;
+    Eigen::Transform<double, 3, Eigen::Isometry> t;
     double cth = cos(jvals[0]);
     double sth = sin(jvals[0]);
     t(0,0) = cth * o(0,0) - sth * o(0,2);
@@ -172,13 +172,13 @@ Eigen::Affine3d ComputeRevoluteJointTransformY(
 }
 
 inline
-Eigen::Affine3d ComputeRevoluteJointTransformZ(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeRevoluteJointTransformZ(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
 #if SBPL_COLLISION_SPECIALIZED_JOINT_TRANSFORMS
-    Eigen::Transform<double, 3, Eigen::Affine> t;
+    Eigen::Transform<double, 3, Eigen::Isometry> t;
     double cth = cos(jvals[0]);
     double sth = sin(jvals[0]);
     t(0,0) = o(0, 0) * cth + o(0, 1) * sth;
@@ -207,8 +207,8 @@ Eigen::Affine3d ComputeRevoluteJointTransformZ(
 }
 
 inline
-Eigen::Affine3d ComputeContinuousJointTransform(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeContinuousJointTransform(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -216,8 +216,8 @@ Eigen::Affine3d ComputeContinuousJointTransform(
 }
 
 inline
-Eigen::Affine3d ComputePrismaticJointTransform(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputePrismaticJointTransform(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -225,8 +225,8 @@ Eigen::Affine3d ComputePrismaticJointTransform(
 }
 
 inline
-Eigen::Affine3d ComputePrismaticJointTransformX(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputePrismaticJointTransformX(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -234,8 +234,8 @@ Eigen::Affine3d ComputePrismaticJointTransformX(
 }
 
 inline
-Eigen::Affine3d ComputePrismaticJointTransformY(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputePrismaticJointTransformY(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -243,8 +243,8 @@ Eigen::Affine3d ComputePrismaticJointTransformY(
 }
 
 inline
-Eigen::Affine3d ComputePrismaticJointTransformZ(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputePrismaticJointTransformZ(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -252,8 +252,8 @@ Eigen::Affine3d ComputePrismaticJointTransformZ(
 }
 
 inline
-Eigen::Affine3d ComputeFloatingJointTransform(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeFloatingJointTransform(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -264,8 +264,8 @@ Eigen::Affine3d ComputeFloatingJointTransform(
 }
 
 inline
-Eigen::Affine3d ComputePlanarJointTransform(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputePlanarJointTransform(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {
@@ -275,8 +275,8 @@ Eigen::Affine3d ComputePlanarJointTransform(
 }
 
 inline
-Eigen::Affine3d ComputeFixedJointTransform(
-    const Eigen::Affine3d& o,
+Eigen::Isometry3d ComputeFixedJointTransform(
+    const Eigen::Isometry3d& o,
     const Eigen::Vector3d& axis,
     double* jvals)
 {

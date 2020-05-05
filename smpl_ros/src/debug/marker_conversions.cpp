@@ -5,7 +5,7 @@ namespace visual {
 
 void ConvertMarkerMsgToMarker(const visualization_msgs::Marker& mm, Marker& m)
 {
-    Eigen::Affine3d pose(
+    Eigen::Isometry3d pose(
             Eigen::Translation3d(
                     mm.pose.position.x,
                     mm.pose.position.y,

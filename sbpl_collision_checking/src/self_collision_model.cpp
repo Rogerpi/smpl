@@ -198,7 +198,7 @@ void SelfCollisionModel::setPadding(double padding)
 }
 
 void SelfCollisionModel::setWorldToModelTransform(
-    const Eigen::Affine3d& transform)
+    const Eigen::Isometry3d& transform)
 {
     (void)m_rcs.setWorldToModelTransform(transform);
 }
@@ -886,11 +886,16 @@ bool CheckGeometryCollision(
     const CollisionGeometry& shape2,
     int shape_index1,
     int shape_index2,
-    const Eigen::Affine3d& pose1,
-    const Eigen::Affine3d& pose2)
+    const Eigen::Isometry3d& pose1,
+    const Eigen::Isometry3d& pose2)
 {
-    Eigen::Affine3d p1 = pose1 * shape1.offset;
-    Eigen::Affine3d p2 = pose2 * shape2.offset;
+    Eigen::Isometry3d offset;
+    offset = shape1.offset.matrix();
+    Eigen::Isometry3d p1 = pose1 * offset;
+
+    offset = shape2.offset.matrix();
+
+    Eigen::Isometry3d p2 = pose2 * offset;
 
     if (shape1.shape->type == ShapeType::Mesh &&
         shape2.shape->type == ShapeType::Mesh)

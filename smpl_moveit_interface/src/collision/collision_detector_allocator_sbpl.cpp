@@ -33,6 +33,6 @@
 
 namespace collision_detection {
 
-const std::string CollisionDetectorAllocatorSBPL::NAME_ = "Collision Detector SBPL";
+const std::string CollisionDetectorAllocatorSBPL::NAME = "Collision Detector SBPL";
 
 } // namespace collision_detection

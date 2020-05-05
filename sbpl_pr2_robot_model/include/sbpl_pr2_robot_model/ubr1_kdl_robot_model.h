@@ -54,7 +54,7 @@ public:
         int free_angle = DEFAULT_FREE_ANGLE_INDEX);
 
     bool computeIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         RobotState& solution,
         ik_option::IkOption option = ik_option::UNRESTRICTED) override;

@@ -36,7 +36,7 @@
 // project includes
 #include <sbpl_kdl_robot_model/kdl_robot_model.h>
 
-void PrintTransform(char* buff, size_t n, const Eigen::Affine3d& T)
+void PrintTransform(char* buff, size_t n, const Eigen::Isometry3d& T)
 {
     snprintf(buff, n, "[ [%f, %f, %f, %f], [%f, %f, %f, %f], [%f, %f, %f, %f], [%f, %f, %f, %f] ]",
             T(0, 0), T(0, 1), T(0, 2), T(0, 3),
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 
     ROS_WARN("IK-FK Test 3 (kinematics_frame == planning_frame)");
 
-    Eigen::Affine3d pose =
+    Eigen::Isometry3d pose =
             Eigen::Translation3d(0.766268, -0.188, 0.790675) *
             Eigen::AngleAxisd(0.5, Eigen::Vector3d::UnitX());
 

@@ -505,7 +505,7 @@ void ConvertObjectToCollisionObjectShallow(
     }
 
     // copy shape poses
-    smpl::collision::AlignedVector<Eigen::Affine3d> shape_poses;
+    smpl::collision::AlignedVector<Eigen::Isometry3d> shape_poses;
     shape_poses.reserve(o->shape_poses_.size());
     for (auto& shape_pose : o->shape_poses_) {
         shape_poses.push_back(shape_pose);

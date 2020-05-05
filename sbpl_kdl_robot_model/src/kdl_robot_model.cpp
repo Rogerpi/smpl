@@ -88,7 +88,7 @@ bool Init(
     ROS_INFO("Initialize Robot Model");
     urdf::JointSpec world_joint;
     world_joint.name = "map";
-    world_joint.origin = Eigen::Affine3d::Identity(); // IMPORTANT
+    world_joint.origin = Eigen::Isometry3d::Identity(); // IMPORTANT
     world_joint.axis = Eigen::Vector3d::Zero();
     world_joint.type = urdf::JointType::Floating;
     if (!urdf::InitRobotModel(
@@ -222,7 +222,7 @@ double GetSolverMinPosition(KDLRobotModel* model, int vidx)
 }
 
 bool KDLRobotModel::computeIKSearch(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     RobotState& solution)
 {
@@ -280,7 +280,7 @@ bool KDLRobotModel::computeIKSearch(
 }
 
 bool KDLRobotModel::computeIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     RobotState& solution,
     ik_option::IkOption option)
@@ -293,7 +293,7 @@ bool KDLRobotModel::computeIK(
 }
 
 bool KDLRobotModel::computeIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     std::vector<RobotState>& solutions,
     ik_option::IkOption option)
@@ -307,7 +307,7 @@ bool KDLRobotModel::computeIK(
 }
 
 bool KDLRobotModel::computeFastIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const RobotState& start,
     RobotState& solution)
 {

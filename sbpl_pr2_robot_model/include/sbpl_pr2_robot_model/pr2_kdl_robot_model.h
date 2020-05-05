@@ -62,13 +62,13 @@ public:
     /// \name Reimplemented Functions from KDLRobotModel
     ///@{
     bool computeIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         RobotState& solution,
         ik_option::IkOption option = ik_option::UNRESTRICTED) override;
 
     bool computeFastIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         RobotState& solution) override;
     ///@}

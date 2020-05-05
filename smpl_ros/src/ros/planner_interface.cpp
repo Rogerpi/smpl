@@ -843,7 +843,7 @@ bool ExtractJointStateGoal(
     if (fk_iface) {
         goal.pose = fk_iface->computeFK(goal.angles);
     } else {
-        goal.pose = Eigen::Affine3d::Identity();
+        goal.pose = Eigen::Isometry3d::Identity();
     }
 
     return true;
@@ -852,7 +852,7 @@ bool ExtractJointStateGoal(
 static
 bool ExtractGoalPoseFromGoalConstraints(
     const moveit_msgs::Constraints& constraints,
-    Eigen::Affine3d& goal_pose)
+    Eigen::Isometry3d& goal_pose)
 {
     assert(!constraints.position_constraints.empty() &&
             constraints.orientation_constraints.empty());
@@ -872,7 +872,7 @@ bool ExtractGoalPoseFromGoalConstraints(
     auto& primitive_pose = position_constraint.constraint_region.primitive_poses.front();
 
     // undo the translation
-    Eigen::Affine3d T_planning_eef; // T_planning_off * T_off_eef;
+    Eigen::Isometry3d T_planning_eef; // T_planning_off * T_off_eef;
     tf::poseMsgToEigen(primitive_pose, T_planning_eef);
     Eigen::Vector3d eef_pos(T_planning_eef.translation());
 
@@ -950,7 +950,7 @@ bool ExtractPoseGoal(
 
     SMPL_INFO_NAMED(PI_LOGGER, "Setting goal position");
 
-    Eigen::Affine3d goal_pose;
+    Eigen::Isometry3d goal_pose;
     if (!ExtractGoalPoseFromGoalConstraints(goal_constraints, goal_pose)) {
         SMPL_WARN_NAMED(PI_LOGGER, "Failed to extract goal pose from goal constraints");
         return false;
@@ -983,7 +983,7 @@ bool ExtractPosesGoal(
     goal.poses.reserve(v_goal_constraints.size());
     for (size_t i = 0; i < v_goal_constraints.size(); ++i) {
         auto& constraints = v_goal_constraints[i];
-        Eigen::Affine3d goal_pose;
+        Eigen::Isometry3d goal_pose;
         if (!ExtractGoalPoseFromGoalConstraints(constraints, goal_pose)) {
             SMPL_WARN_NAMED(PI_LOGGER, "Failed to extract goal pose from goal constraints");
             return false;

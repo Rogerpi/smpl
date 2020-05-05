@@ -116,7 +116,7 @@ RobotMotionCollisionModel::RobotMotionCollisionModel(
         for (int cjidx : rcm->linkChildJointIndices(clidx)){
             if (sample_radii[cjidx] != 0.0) {
                 // transform motion samples from child joint into parent joint frame
-                const Eigen::Affine3d& T_joint_child = rcm->jointOrigin(cjidx);
+                const Eigen::Isometry3d& T_joint_child = rcm->jointOrigin(cjidx);
 
                 size_t child_mr_samples = 0;
                 for (const Eigen::Vector3d& sphere_pos : sample_spheres[cjidx]) {
@@ -169,7 +169,7 @@ RobotMotionCollisionModel::RobotMotionCollisionModel(
                             alpha * rcm->jointVarMaxPosition(vidx);
 
                     // construct rotation about joint axis at this variable position
-                    const Eigen::Affine3d T_joint_link(
+                    const Eigen::Isometry3d T_joint_link(
                             Eigen::AngleAxisd(val, rcm->jointAxis(jidx)));
 
                     sample_motion_sphere_centers.push_back(T_joint_link * mr_center);
@@ -183,7 +183,7 @@ RobotMotionCollisionModel::RobotMotionCollisionModel(
 
                     int vidx = rcm->jointVarIndexFirst(jidx);
 
-                    const Eigen::Affine3d T_joint_link(
+                    const Eigen::Isometry3d T_joint_link(
                             Eigen::AngleAxisd(val, rcm->jointAxis(jidx)));
 
                     sample_motion_sphere_centers.push_back(T_joint_link * mr_center);
@@ -202,7 +202,7 @@ RobotMotionCollisionModel::RobotMotionCollisionModel(
                             alpha * rcm->jointVarMaxPosition(vidx);
 
                     // construct rotation about joint axis at this variable position
-                    const Eigen::Affine3d T_joint_link(
+                    const Eigen::Isometry3d T_joint_link(
                             Eigen::Translation3d(val * rcm->jointAxis(jidx)));
 
                     sample_motion_sphere_centers.push_back(T_joint_link * mr_center);
@@ -213,7 +213,7 @@ RobotMotionCollisionModel::RobotMotionCollisionModel(
                 if (jidx != 0) ROS_ERROR("TODO: Cannot sample planar joint transform");
             } else if (rcm->jointType(jidx) == JointType::FIXED) {
                 ROS_DEBUG_NAMED(RMCM_LOGGER, "  sample fixed joint with 1 sample");
-                const Eigen::Affine3d T_joint_link(rcm->jointOrigin(jidx));
+                const Eigen::Isometry3d T_joint_link(rcm->jointOrigin(jidx));
                 sample_motion_sphere_centers.push_back(T_joint_link * mr_center);
             }
         }

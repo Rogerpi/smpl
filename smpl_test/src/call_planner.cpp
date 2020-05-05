@@ -572,7 +572,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    cc.setWorldToModelTransform(Eigen::Affine3d::Identity());
+    cc.setWorldToModelTransform(Eigen::Isometry3d::Identity());
 
     SV_SHOW_INFO(grid.getDistanceFieldVisualization(0.2));
 

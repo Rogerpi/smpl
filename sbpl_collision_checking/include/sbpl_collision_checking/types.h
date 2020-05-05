@@ -41,73 +41,72 @@
 #include <utility>
 
 // system includes
+#include <moveit/collision_detection/collision_matrix.h>
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
-#include <moveit/collision_detection/collision_matrix.h>
 
-namespace smpl {
-namespace collision {
-
+namespace smpl
+{
+namespace collision
+{
 struct Sphere
 {
-    Eigen::Vector3d center;
-    double          radius;
+  Eigen::Vector3d center;
+  double radius;
 };
 
 using AllowedCollisionMatrix = collision_detection::AllowedCollisionMatrix;
 
-namespace AllowedCollision {
+namespace AllowedCollision
+{
 using Type = collision_detection::AllowedCollision::Type;
-} // namespace Allowed Collision
+}  // namespace AllowedCollision
 
 template <class T>
 using AlignedVector = std::vector<T, Eigen::aligned_allocator<T>>;
 
-using Affine3dVector = AlignedVector<Eigen::Affine3d>;
+using Isometry3dVector = AlignedVector<Eigen::Isometry3d>;
 
-template <
-    class Key,
-    class T,
-    class Hash = std::hash<Key>,
-    class KeyEqual = std::equal_to<Key>,
-    class Allocator = std::allocator<std::pair<const Key, T>>>
+template <class Key, class T, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>,
+          class Allocator = std::allocator<std::pair<const Key, T>>>
 using hash_map = std::unordered_map<Key, T, Hash, KeyEqual, Allocator>;
 
-inline std::string AffineToString(const Eigen::Affine3d& t)
+inline std::string IsometryToString(const Eigen::Isometry3d& t)
 {
-    const Eigen::Vector3d pos(t.translation());
-    const Eigen::Quaterniond rot(t.rotation());
-    const int ENOUGH = 1024;
-    char buff[ENOUGH] = { 0 };
-    snprintf(buff, ENOUGH, "{ pos = (%0.3f, %0.3f, %0.3f), rot = (%0.3f, %0.3f, %0.3f, %0.3f) }", pos.x(), pos.y(), pos.z(), rot.w(), rot.x(), rot.y(), rot.z());
-    return std::string(buff);
+  const Eigen::Vector3d pos(t.translation());
+  const Eigen::Quaterniond rot(t.rotation());
+  const int ENOUGH = 1024;
+  char buff[ENOUGH] = { 0 };
+  snprintf(buff, ENOUGH, "{ pos = (%0.3f, %0.3f, %0.3f), rot = (%0.3f, %0.3f, %0.3f, %0.3f) }", pos.x(), pos.y(),
+           pos.z(), rot.w(), rot.x(), rot.y(), rot.z());
+  return std::string(buff);
 }
 
 struct CollisionDetail
 {
-    std::string first_link;
-    std::string second_link;
-    double penetration;
-    Eigen::Vector3d contact_point;
-    Eigen::Vector3d contact_normal;
+  std::string first_link;
+  std::string second_link;
+  double penetration;
+  Eigen::Vector3d contact_point;
+  Eigen::Vector3d contact_normal;
 };
 
 struct CollisionDetails
 {
-    std::vector<CollisionDetail> details;
+  std::vector<CollisionDetail> details;
 
-    // TODO:
-    // * (body1 name, body2 name) "voxels" for voxels collisions; link names o/w
-    // * penetration distance
-    // * contact point
-    // * contact normals (for voxels, use local gradient)
+  // TODO:
+  // * (body1 name, body2 name) "voxels" for voxels collisions; link names o/w
+  // * penetration distance
+  // * contact point
+  // * contact normals (for voxels, use local gradient)
 
-    // for now...this is interesting enough
-    int sphere_collision_count;
-    int voxels_collision_count;
+  // for now...this is interesting enough
+  int sphere_collision_count;
+  int voxels_collision_count;
 };
 
-} // namespace collision
-} // namespace smpl
+}  // namespace collision
+}  // namespace smpl
 
 #endif

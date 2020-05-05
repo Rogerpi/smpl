@@ -211,14 +211,14 @@ void RobotCommandModel::setVariablePosition(int index, double value)
 
 bool RobotCommandModel::setFromIK(
     const moveit::core::JointModelGroup* group,
-    const Eigen::Affine3d& pose,
-    unsigned int attempts,
+    const Eigen::Isometry3d& pose,
+    unsigned int attempts, //Remove
     double timeout,
     const moveit::core::GroupStateValidityCallbackFn& constraint,
     const kinematics::KinematicsQueryOptions& options)
 {
     // TODO: detect changes to state
-    auto res = m_robot_state->setFromIK(group, pose, attempts, timeout, constraint, options);
+    auto res = m_robot_state->setFromIK(group, pose, timeout, constraint, options);
     if (res) {
         ROS_DEBUG_NAMED(LOG, "Set positions of joint group '%s' via IK", group->getName().c_str());
         updateAndNotify();
@@ -284,7 +284,7 @@ bool RobotCommandModel::setToDefaultValues(
 
 void RobotCommandModel::setJointPositions(
     const moveit::core::JointModel* joint,
-    const Eigen::Affine3d& joint_transform)
+    const Eigen::Isometry3d& joint_transform)
 {
     // TODO: detect changes to state
     m_robot_state->setJointPositions(joint, joint_transform);

@@ -97,7 +97,7 @@ bool CollisionSpace::setJointPosition(
 /// \brief Set the transform from the reference frame to the robot model frame
 /// \param transform The transform from the reference frame to the robot frame
 void CollisionSpace::setWorldToModelTransform(
-    const Eigen::Affine3d& transform)
+    const Eigen::Isometry3d& transform)
 {
     m_rcs->setWorldToModelTransform(transform);
     const int vfidx = m_rcm->jointVarIndexFirst(0);
@@ -200,7 +200,7 @@ bool CollisionSpace::removeShapes(const CollisionObject* object)
 bool CollisionSpace::attachObject(
     const std::string& id,
     const std::vector<shapes::ShapeConstPtr>& shapes,
-    const Affine3dVector& transforms,
+    const Isometry3dVector& transforms,
     const std::string& link_name)
 {
     return m_abcm->attachBody(id, shapes, transforms, link_name);
@@ -514,7 +514,7 @@ bool CollisionSpace::init(
     const std::string& group_name,
     const std::vector<std::string>& planning_joints)
 {
-    auto urdf = boost::make_shared<::urdf::Model>();
+    auto urdf = std::make_shared<::urdf::Model>();
     if (!urdf->initString(urdf_string)) {
         ROS_ERROR_NAMED(LOG, "Failed to parse URDF");
         return false;

@@ -69,7 +69,7 @@ public:
     auto getPlanningLink() const -> const std::string&;
 
     bool computeIKSearch(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         RobotState& solution);
 
@@ -80,7 +80,7 @@ public:
     const int redundantVariableCount() const override { return 0; }
     const int redundantVariableIndex(int vidx) const override { return 0.0; }
     bool computeFastIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         RobotState& solution) override;
     /// @}
@@ -88,13 +88,13 @@ public:
     /// \name InverseKinematicsInterface Interface
     ///@{
     bool computeIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         RobotState& solution,
         ik_option::IkOption option = ik_option::UNRESTRICTED) override;
 
     bool computeIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const RobotState& start,
         std::vector<RobotState>& solutions,
         ik_option::IkOption option = ik_option::UNRESTRICTED) override;

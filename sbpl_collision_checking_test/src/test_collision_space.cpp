@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 
     // add robot's pose in map
 
-    cspace.setWorldToModelTransform(Eigen::Affine3d::Identity());
+    cspace.setWorldToModelTransform(Eigen::Isometry3d::Identity());
     cspace.setJointPosition("right_gripper_finger_joint", 0.08);
     cspace.setJointPosition("left_gripper_finger_joint", 0.08);
 

@@ -26,7 +26,7 @@ auto ConvertCollisionObjectToObject(const moveit_msgs::CollisionObject& co)
             return nullptr;
         }
 
-        Eigen::Affine3d transform;
+        Eigen::Isometry3d transform;
         tf::poseMsgToEigen(pose, transform);
 
         o->shapes_.push_back(sp);
@@ -43,7 +43,7 @@ auto ConvertCollisionObjectToObject(const moveit_msgs::CollisionObject& co)
             return nullptr;
         }
 
-        Eigen::Affine3d transform;
+        Eigen::Isometry3d transform;
         tf::poseMsgToEigen(pose, transform);
 
         o->shapes_.push_back(sp);
@@ -60,7 +60,7 @@ auto ConvertCollisionObjectToObject(const moveit_msgs::CollisionObject& co)
             return nullptr;
         }
 
-        Eigen::Affine3d transform;
+        Eigen::Isometry3d transform;
         tf::poseMsgToEigen(pose, transform);
 
         o->shapes_.push_back(sp);
@@ -90,7 +90,7 @@ auto ConvertOctomapToObject(const octomap_msgs::OctomapWithPose& octomap)
     decltype(shapes::OcTree().octree) ot(tree);         // snap into a shared_ptr
     shapes::ShapeConstPtr sp(new shapes::OcTree(ot));   // snap into a shape
 
-    Eigen::Affine3d transform;
+    Eigen::Isometry3d transform;
     tf::poseMsgToEigen(octomap.origin, transform);
 
     // construct the object
@@ -187,7 +187,7 @@ bool CollisionSpaceScene::AddCollisionObjectMsg(
     }
 
     std::vector<CollisionShape*> shapes;
-    AlignedVector<Eigen::Affine3d> shape_poses;
+    AlignedVector<Eigen::Isometry3d> shape_poses;
 
     for (size_t i = 0; i < object.primitives.size(); ++i) {
         auto& prim = object.primitives[i];
@@ -222,7 +222,7 @@ bool CollisionSpaceScene::AddCollisionObjectMsg(
         shapes.push_back(m_collision_shapes.back().get());
 
         auto& prim_pose = object.primitive_poses[i];
-        Eigen::Affine3d transform;
+        Eigen::Isometry3d transform;
         tf::poseMsgToEigen(prim_pose, transform);
         shape_poses.push_back(transform);
     }
@@ -236,7 +236,7 @@ bool CollisionSpaceScene::AddCollisionObjectMsg(
         shapes.push_back(m_collision_shapes.back().get());
 
         auto& plane_pose = object.plane_poses[i];
-        Eigen::Affine3d transform;
+        Eigen::Isometry3d transform;
         tf::poseMsgToEigen(plane_pose, transform);
         shape_poses.push_back(transform);
     }
@@ -247,7 +247,7 @@ bool CollisionSpaceScene::AddCollisionObjectMsg(
         assert(0); // TODO: implement
 
         auto& mesh_pose = object.mesh_poses[i];
-        Eigen::Affine3d transform;
+        Eigen::Isometry3d transform;
         tf::poseMsgToEigen(mesh_pose, transform);
         shape_poses.push_back(transform);
     }
@@ -357,7 +357,7 @@ bool CollisionSpaceScene::ProcessOctomapMsg(
 
     auto shape = smpl::make_unique<OcTreeShape>(ot.get());
 
-    Eigen::Affine3d transform;
+    Eigen::Isometry3d transform;
     tf::poseMsgToEigen(octomap.origin, transform);
 
     auto object = smpl::make_unique<CollisionObject>();

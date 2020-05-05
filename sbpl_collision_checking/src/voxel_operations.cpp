@@ -94,7 +94,7 @@ bool VoxelizePlanes(
 static
 bool VoxelizePlane(
     const shapes::Plane& plane,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -106,7 +106,7 @@ bool VoxelizePlane(
 static
 bool VoxelizePlane(
     const PlaneShape& plane,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -130,7 +130,7 @@ bool VoxelizePlane(
 static
 bool VoxelizeNonPlaneShape(
     const CollisionShape& shape,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -172,7 +172,7 @@ bool VoxelizeNonPlaneShape(
 static
 bool VoxelizeNonPlaneShape(
     const shapes::Shape& shape,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -391,7 +391,7 @@ bool VoxelizeCollisionObject(
 
 bool VoxelizeShape(
     const CollisionShape& shape,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -401,7 +401,7 @@ bool VoxelizeShape(
 
 bool VoxelizeShape(
     const CollisionShape& shape,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     const Eigen::Vector3d& gmin,
@@ -418,7 +418,7 @@ bool VoxelizeShape(
 
 bool VoxelizeSphere(
     const SphereShape& sphere,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -430,7 +430,7 @@ bool VoxelizeSphere(
 
 bool VoxelizeCylinder(
     const CylinderShape& cylinder,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -443,7 +443,7 @@ bool VoxelizeCylinder(
 
 bool VoxelizeCone(
     const ConeShape& cone,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -456,7 +456,7 @@ bool VoxelizeCone(
 
 bool VoxelizeBox(
     const BoxShape& box,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -470,7 +470,7 @@ bool VoxelizeBox(
 
 bool VoxelizePlane(
     const PlaneShape& plane,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     const Eigen::Vector3d& gmin,
@@ -485,7 +485,7 @@ bool VoxelizePlane(
 
 bool VoxelizeMesh(
     const MeshShape& mesh,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -505,7 +505,7 @@ bool VoxelizeMesh(
 
 bool VoxelizeOcTree(
     const octomap::OcTree& tree,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -535,7 +535,7 @@ bool VoxelizeOcTree(
         }
     }
 
-    if (!pose.isApprox(Eigen::Affine3d::Identity())) {
+    if (!pose.isApprox(Eigen::Isometry3d::Identity())) {
         for (auto i = prev_size; i < voxels.size(); ++i) {
             voxels[i] = pose * voxels[i];
         }
@@ -546,7 +546,7 @@ bool VoxelizeOcTree(
 
 bool VoxelizeOcTree(
     const OcTreeShape& octree,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -557,7 +557,7 @@ bool VoxelizeOcTree(
 
 bool VoxelizeShape(
     const shapes::Shape& shape,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -567,7 +567,7 @@ bool VoxelizeShape(
 
 bool VoxelizeShape(
     const shapes::Shape& shape,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     const Eigen::Vector3d& gmin,
@@ -589,7 +589,7 @@ bool VoxelizeShape(
 
 bool VoxelizeSphere(
     const shapes::Sphere& sphere,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -601,7 +601,7 @@ bool VoxelizeSphere(
 
 bool VoxelizeCylinder(
     const shapes::Cylinder& cylinder,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -614,7 +614,7 @@ bool VoxelizeCylinder(
 
 bool VoxelizeCone(
     const shapes::Cone& cone,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -627,7 +627,7 @@ bool VoxelizeCone(
 
 bool VoxelizeBox(
     const shapes::Box& box,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -641,7 +641,7 @@ bool VoxelizeBox(
 
 bool VoxelizePlane(
     const shapes::Plane& plane,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     const Eigen::Vector3d& gmin,
@@ -656,7 +656,7 @@ bool VoxelizePlane(
 
 bool VoxelizeMesh(
     const shapes::Mesh& mesh,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -676,7 +676,7 @@ bool VoxelizeMesh(
 
 bool VoxelizeOcTree(
     const shapes::OcTree& octree,
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     double res,
     const Eigen::Vector3d& go,
     std::vector<Eigen::Vector3d>& voxels)
@@ -733,7 +733,7 @@ bool VoxelizeBox(
     const double width = box.dimensions[shape_msgs::SolidPrimitive::BOX_Y];
     const double height = box.dimensions[shape_msgs::SolidPrimitive::BOX_Z];
 
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     tf::poseMsgToEigen(pose, eigen_pose);
 
     std::vector<Eigen::Vector3d> sbpl_voxels;
@@ -754,7 +754,7 @@ bool VoxelizeSphere(
     const double radius =
             sphere.dimensions[shape_msgs::SolidPrimitive::SPHERE_RADIUS];
 
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     tf::poseMsgToEigen(pose, eigen_pose);
 
     std::vector<Eigen::Vector3d> sbpl_voxels;
@@ -774,7 +774,7 @@ bool VoxelizeCylinder(
     const double height = cylinder.dimensions[shape_msgs::SolidPrimitive::CYLINDER_HEIGHT];
     const double radius = cylinder.dimensions[shape_msgs::SolidPrimitive::CYLINDER_RADIUS];
 
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     tf::poseMsgToEigen(pose, eigen_pose);
 
     std::vector<Eigen::Vector3d> sbpl_voxels;
@@ -795,7 +795,7 @@ bool VoxelizeCone(
     const double height = cone.dimensions[shape_msgs::SolidPrimitive::CONE_HEIGHT];
     const double radius = cone.dimensions[shape_msgs::SolidPrimitive::CONE_RADIUS];
 
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     tf::poseMsgToEigen(pose, eigen_pose);
 
     std::vector<Eigen::Vector3d> sbpl_voxels;
@@ -821,7 +821,7 @@ bool VoxelizeMesh(
 
     std::vector<std::uint32_t> indices = ConvertToVertexIndices(mesh.triangles);
 
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     tf::poseMsgToEigen(pose, eigen_pose);
 
     std::vector<Eigen::Vector3d> sbpl_voxels;
@@ -840,7 +840,7 @@ bool VoxelizePlane(
     const Eigen::Vector3d& gmax,
     std::vector<Eigen::Vector3d>& voxels)
 {
-    Eigen::Affine3d eigen_pose;
+    Eigen::Isometry3d eigen_pose;
     tf::poseMsgToEigen(pose, eigen_pose);
 
     // TODO: incorporate pose

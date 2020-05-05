@@ -561,7 +561,7 @@ void MoveItRobotModel::printRobotModelInformation()
 auto MoveItRobotModel::computeFK(
     const smpl::RobotState& state,
     const std::string& name)
-    -> Eigen::Affine3d
+    -> Eigen::Isometry3d
 {
     assert(initialized() && "MoveItRobotModel is uninitialized");
     assert(state.size() == m_active_var_count && "Incorrect number of joint variables");
@@ -580,16 +580,15 @@ auto MoveItRobotModel::computeFK(
     m_robot_state->updateLinkTransforms();
 
     auto T_model_link = m_robot_state->getGlobalLinkTransform(name);
-
     if (!transformToPlanningFrame(T_model_link)) {
-        return Eigen::Affine3d::Identity(); // errors printed within
+        return Eigen::Isometry3d::Identity(); // errors printed within
     }
 
     return T_model_link; // actually, T_planning_link
 }
 
 auto MoveItRobotModel::computeFK(const smpl::RobotState& state)
-    -> Eigen::Affine3d
+    -> Eigen::Isometry3d
 {
     // how do we know what the planning link is for an arbitrary model? This
     // will have to be set from above when a motion plan request comes in with
@@ -601,7 +600,7 @@ auto MoveItRobotModel::computeFK(const smpl::RobotState& state)
 }
 
 bool MoveItRobotModel::computeIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const smpl::RobotState& start,
     smpl::RobotState& solution,
     smpl::ik_option::IkOption option)
@@ -629,7 +628,7 @@ bool MoveItRobotModel::computeIK(
 }
 
 bool MoveItRobotModel::computeIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const smpl::RobotState& start,
     std::vector<smpl::RobotState>& solutions,
     smpl::ik_option::IkOption option)
@@ -658,7 +657,7 @@ auto MoveItRobotModel::redundantVariableIndex(int rvidx) const -> const int
 }
 
 bool MoveItRobotModel::computeFastIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const smpl::RobotState& start,
     smpl::RobotState& solution)
 {
@@ -745,7 +744,7 @@ auto MoveItRobotModel::getExtension(size_t class_code) -> smpl::Extension*
 }
 
 bool MoveItRobotModel::computeUnrestrictedIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const smpl::RobotState& start,
     smpl::RobotState& solution,
     bool lock_redundant_joints)
@@ -841,7 +840,7 @@ bool MoveItRobotModel::computeUnrestrictedIK(
 }
 
 bool MoveItRobotModel::computeWristIK(
-    const Eigen::Affine3d& pose,
+    const Eigen::Isometry3d& pose,
     const smpl::RobotState& start,
     smpl::RobotState& solution)
 {
@@ -852,9 +851,9 @@ bool MoveItRobotModel::computeWristIK(
     }
     m_robot_state->updateLinkTransforms();
 
-    const Eigen::Affine3d& T_model_forearm =
+    const Eigen::Isometry3d& T_model_forearm =
             m_robot_state->getGlobalLinkTransform(m_forearm_roll_link);
-    const Eigen::Affine3d& T_model_wrist =
+    const Eigen::Isometry3d& T_model_wrist =
             m_robot_state->getGlobalLinkTransform(m_wrist_roll_link);
 
     const Eigen::Vector3d forearm_pos(T_model_forearm.translation());
@@ -887,7 +886,7 @@ bool MoveItRobotModel::computeWristIK(
 #endif
 }
 
-bool MoveItRobotModel::transformToPlanningFrame(Eigen::Affine3d& T_model_link) const
+bool MoveItRobotModel::transformToPlanningFrame(Eigen::Isometry3d& T_model_link) const
 {
     if (m_planning_frame_is_model_frame) {
         return true;
@@ -913,7 +912,7 @@ bool MoveItRobotModel::transformToPlanningFrame(Eigen::Affine3d& T_model_link) c
     return true;
 }
 
-bool MoveItRobotModel::transformToModelFrame(Eigen::Affine3d& T_planning_link) const
+bool MoveItRobotModel::transformToModelFrame(Eigen::Isometry3d& T_planning_link) const
 {
     if (m_planning_frame_is_model_frame) {
         return true;

@@ -139,7 +139,7 @@ bool MoveGroupCommandModel::loadRobot(const std::string& robot_description)
 
     // load the robot from URDF and construct a scene monitor for it
     using planning_scene_monitor::CurrentStateMonitor;
-    auto tf = boost::make_shared<tf::TransformListener>();
+    auto tf = std::make_shared<tf2_ros::Buffer>();
     auto state_monitor = smpl::make_unique<CurrentStateMonitor>(robot_model, tf);
 
     ROS_DEBUG_NAMED(LOG, "Initialize Robot Command Model");
@@ -857,7 +857,7 @@ bool MoveGroupCommandModel::fillPoseGoalConstraints(
 
     const Eigen::Vector3d target_offset(0.0, 0.0, 0.0);
     auto& T_model_tip = robot_state->getGlobalLinkTransform(tip_link);
-    Eigen::Affine3d T_model_tgtoff = T_model_tip * Eigen::Translation3d(target_offset);
+    Eigen::Isometry3d T_model_tgtoff = T_model_tip * Eigen::Translation3d(target_offset);
     geometry_msgs::Pose tip_link_pose;
     tf::poseEigenToMsg(T_model_tip, tip_link_pose);
 

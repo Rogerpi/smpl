@@ -100,24 +100,24 @@ public:
     auto computeFK(
         const smpl::RobotState& state,
         const std::string& name)
-        -> Eigen::Affine3d;
+        -> Eigen::Isometry3d;
 
     /// \name ForwardKinematicsInterface Interface
     ///@{
     auto computeFK(const smpl::RobotState& state)
-        -> Eigen::Affine3d override;
+        -> Eigen::Isometry3d override;
     ///@}
 
     /// \name InverseKinematicsInterface Interface
     ///@{
     bool computeIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const smpl::RobotState& start,
         smpl::RobotState& solution,
         smpl::ik_option::IkOption option = smpl::ik_option::UNRESTRICTED) override;
 
     bool computeIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const smpl::RobotState& start,
         std::vector<smpl::RobotState>& solutions,
         smpl::ik_option::IkOption option = smpl::ik_option::UNRESTRICTED) override;
@@ -130,7 +130,7 @@ public:
     const int redundantVariableIndex(int rvidx) const override;
 
     bool computeFastIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const smpl::RobotState& start,
         smpl::RobotState& solution) override;
     ///@}
@@ -194,18 +194,18 @@ private:
 #endif
 
     bool computeUnrestrictedIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const smpl::RobotState& start,
         smpl::RobotState& solution,
         bool lock_redundant_joints = false);
 
     bool computeWristIK(
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         const smpl::RobotState& start,
         smpl::RobotState& solution);
 
-    bool transformToPlanningFrame(Eigen::Affine3d& T_model_link) const;
-    bool transformToModelFrame(Eigen::Affine3d& T_planning_link) const;
+    bool transformToPlanningFrame(Eigen::Isometry3d& T_model_link) const;
+    bool transformToModelFrame(Eigen::Isometry3d& T_planning_link) const;
 };
 
 } // namespace sbpl_interface

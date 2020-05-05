@@ -102,11 +102,11 @@ target_link_libraries(
     smpl::smpl)
 
 # Ad-hoc handling of API differences between indigo and kinetic distributions
-if("$ENV{ROS_DISTRO}" STREQUAL "kinetic")
-    set(COLLISION_DETECTION_SBPL_ROS_VERSION COLLISION_DETECTION_SBPL_ROS_KINETIC)
+if("$ENV{ROS_DISTRO}" STREQUAL "indigo")
+    set(COLLISION_DETECTION_SBPL_ROS_VERSION COLLISION_DETECTION_SBPL_ROS_INDIGO)
 else()
 #elseif ("$ENV{ROS_DISTRO}" STREQUAL "indigo")
-    set(COLLISION_DETECTION_SBPL_ROS_VERSION COLLISION_DETECTION_SBPL_ROS_INDIGO)
+    set(COLLISION_DETECTION_SBPL_ROS_VERSION COLLISION_DETECTION_SBPL_ROS_KINETIC)
 endif()
 
 #########################################

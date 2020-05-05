@@ -374,7 +374,7 @@ bool GetPlanningFrameWorkspaceAABB(
     auto& T_scene_workspace = scene.getFrameTransform(workspace.header.frame_id);
     auto& T_scene_planning = scene.getFrameTransform(scene.getPlanningFrame());
 
-    Eigen::Affine3d T_planning_workspace =
+    Eigen::Isometry3d T_planning_workspace =
             T_scene_planning.inverse() * T_scene_workspace;
 
     // l = left, r = right, n = near, f = far, b = bottom, t = top
@@ -468,7 +468,7 @@ auto CreateHeuristicGrid(
     auto size_y = workspace_aabb.extents.y;
     auto size_z = workspace_aabb.extents.z;
 
-    Eigen::Affine3d T_planning_workspace;
+    Eigen::Isometry3d T_planning_workspace;
     T_planning_workspace = Eigen::Translation3d(
             workspace_aabb.pose.position.x - 0.5 * workspace_aabb.extents.x,
             workspace_aabb.pose.position.y - 0.5 * workspace_aabb.extents.y,

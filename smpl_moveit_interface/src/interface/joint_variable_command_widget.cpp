@@ -701,12 +701,12 @@ void JointVariableCommandWidget::updateRobotState()
 
             ROS_DEBUG_NAMED(LOG, "  Sync rpy from quaternion (%0.3f, %0.3f, %0.3f, %0.3f)", qvars[0], qvars[1], qvars[2], qvars[3]);
             // simultaneously set the values for the rpy spinboxes
-            Eigen::Affine3d rot(Eigen::Quaterniond(
+            Eigen::Isometry3d rot(Eigen::Quaterniond(
                     qvars[0], qvars[1], qvars[2], qvars[3]));
             Eigen::Vector3d ypr;
             smpl::angles::get_euler_zyx(rot.rotation(), ypr[0], ypr[1], ypr[2]);
 
-            Eigen::Affine3d A(
+            Eigen::Isometry3d A(
                 Eigen::AngleAxisd(ypr[0], Eigen::Vector3d::UnitZ()) *
                 Eigen::AngleAxisd(ypr[1], Eigen::Vector3d::UnitY()) *
                 Eigen::AngleAxisd(ypr[2], Eigen::Vector3d::UnitX()));

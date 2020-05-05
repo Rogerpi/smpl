@@ -90,7 +90,7 @@ struct RobotModel :
     double accLimit(int vidx) const override;
     bool checkJointLimits(const smpl::RobotState& state, bool verbose = false) override;
 
-    auto computeFK(const smpl::RobotState& state) -> Eigen::Affine3d override;
+    auto computeFK(const smpl::RobotState& state) -> Eigen::Isometry3d override;
 
     auto getExtension(size_t class_code) -> smpl::Extension* override;
 };
@@ -131,7 +131,7 @@ bool RobotModel::checkJointLimits(const smpl::RobotState& state, bool verbose)
     return true;
 }
 
-auto RobotModel::computeFK(const smpl::RobotState& state) -> Eigen::Affine3d
+auto RobotModel::computeFK(const smpl::RobotState& state) -> Eigen::Isometry3d
 {
     auto s = MakeStateOMPL(this->si->getStateSpace(), state);
     OMPLProjection projected;
@@ -965,7 +965,7 @@ void SetOccupancyGrid(PlannerImpl* planner, OccupancyGrid* grid)
 
 PoseGoal::PoseGoal(
     const ompl::base::SpaceInformationPtr& si,
-    const Eigen::Affine3d& pose)
+    const Eigen::Isometry3d& pose)
 :
     ompl::base::Goal(si),
     pose(pose)

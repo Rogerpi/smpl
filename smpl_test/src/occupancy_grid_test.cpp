@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 
     const double cube_size = 1.0;
     Eigen::Vector3d cube_pos;
-    Eigen::Affine3d cube_pose;
+    Eigen::Isometry3d cube_pose;
 
     std::vector<Eigen::Vector3d> voxels;
     cube_pos = Eigen::Vector3d(-0.333, 0.0, 0.5);

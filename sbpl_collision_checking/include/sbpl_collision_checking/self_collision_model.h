@@ -72,7 +72,7 @@ public:
 
     void setPadding(double padding);
 
-    void setWorldToModelTransform(const Eigen::Affine3d& transform);
+    void setWorldToModelTransform(const Eigen::Isometry3d& transform);
 
     bool checkCollision(
         const RobotCollisionState& state,

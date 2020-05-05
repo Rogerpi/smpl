@@ -54,8 +54,8 @@
 namespace smpl {
 namespace collision {
 
-typedef Eigen::Affine3d (*JointTransformFunction)(
-    const Eigen::Affine3d& origin,
+typedef Eigen::Isometry3d (*JointTransformFunction)(
+    const Eigen::Isometry3d& origin,
     const Eigen::Vector3d& axis,
     double* jvals);
 
@@ -129,7 +129,7 @@ public:
     int    jointParentLinkIndex(int jidx) const;
     int    jointChildLinkIndex(int jidx) const;
 
-    auto   jointOrigin(int jidx) const -> const Eigen::Affine3d&;
+    auto   jointOrigin(int jidx) const -> const Eigen::Isometry3d&;
     auto   jointAxis(int jidx) const -> const Eigen::Vector3d&;
     auto   jointTransformFn(int jidx) const -> JointTransformFunction;
 
@@ -203,7 +203,7 @@ private:
     std::vector<int>                        m_jvar_joint_indices;
 
     std::vector<std::string>                m_joint_names;
-    Affine3dVector                          m_joint_origins;
+    Isometry3dVector                        m_joint_origins;
     std::vector<Eigen::Vector3d>            m_joint_axes;
     std::vector<std::pair<int, int>>        m_joint_var_indices;
     std::vector<JointTransformFunction>     m_joint_transforms;
@@ -300,7 +300,7 @@ private:
 
     bool checkCollisionModelReferences() const;
 
-    Eigen::Affine3d poseUrdfToEigen(const ::urdf::Pose& p) const;
+    Eigen::Isometry3d poseUrdfToEigen(const ::urdf::Pose& p) const;
 
     bool voxelizeLink(
         const ::urdf::ModelInterface& urdf,
@@ -314,7 +314,7 @@ private:
 
     bool voxelizeGeometry(
         const ::urdf::Geometry& geom,
-        const Eigen::Affine3d& pose,
+        const Eigen::Isometry3d& pose,
         double res,
         std::vector<Eigen::Vector3d>& voxels) const;
 };
@@ -464,7 +464,7 @@ int RobotCollisionModel::jointChildLinkIndex(int jidx) const
 }
 
 inline
-const Eigen::Affine3d& RobotCollisionModel::jointOrigin(int jidx) const
+const Eigen::Isometry3d& RobotCollisionModel::jointOrigin(int jidx) const
 {
     ASSERT_VECTOR_RANGE(m_joint_origins, jidx);
     return m_joint_origins[jidx];

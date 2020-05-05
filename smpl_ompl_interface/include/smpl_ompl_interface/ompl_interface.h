@@ -29,13 +29,13 @@ struct PlannerImpl;
 
 struct PoseGoal : public ompl::base::Goal
 {
-    Eigen::Affine3d pose;
+    Eigen::Isometry3d pose;
     Eigen::Vector3d position_tolerance;
     Eigen::Vector3d orientation_tolerance;
 
     PoseGoal(
         const ompl::base::SpaceInformationPtr& si,
-        const Eigen::Affine3d& pose = Eigen::Affine3d::Identity());
+        const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity());
 
     bool isSatisfied(const ompl::base::State* state) const override;
 };

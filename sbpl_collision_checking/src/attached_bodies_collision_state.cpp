@@ -66,7 +66,7 @@ bool AttachedBodiesCollisionState::updateVoxelsState(int vsidx)
     const int bidx = state.model->link_index;
     updateAttachedBodyTransform(bidx);
 
-    const Eigen::Affine3d& T_model_body = attachedBodyTransform(bidx);
+    const Eigen::Isometry3d& T_model_body = attachedBodyTransform(bidx);
 
     // transform voxels into the model frame
     std::vector<Eigen::Vector3d> new_voxels(state.model->voxels.size());
@@ -98,7 +98,7 @@ bool AttachedBodiesCollisionState::updateSphereState(
     updateAttachedBodyTransform(bidx);
 
     ROS_DEBUG_NAMED(ABS_LOGGER, "Updating position of sphere '%s'", sphere_state.model->name.c_str());
-    const Eigen::Affine3d& T_model_body = attachedBodyTransform(bidx);
+    const Eigen::Isometry3d& T_model_body = attachedBodyTransform(bidx);
     sphere_state.pos = T_model_body * sphere_state.model->center;
 
     sphere_state.version = attachedBodyTransformVersion(bidx);

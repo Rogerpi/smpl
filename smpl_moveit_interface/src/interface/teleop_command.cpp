@@ -254,7 +254,7 @@ void TeleopCommand::update()
             // world -> tip'
             // root' -> tip' = root -> tip
             // root -> world * world -> tip
-            Eigen::Affine3d target_pose =
+            Eigen::Isometry3d target_pose =
                     T_world_root *
                     T_root_root_offset *
                     T_world_root.inverse() *
@@ -275,7 +275,7 @@ void TeleopCommand::update()
                 const double dR = rps * dt * m_prev_joy->axes[(int)Axis::DH];
                 auto& T_world_robot = robot_state->getGlobalLinkTransform(
                         robot_model->getRootLink());
-                Eigen::Affine3d target_pose =
+                Eigen::Isometry3d target_pose =
                         T_world_robot *
                         Eigen::Translation3d(dx, dy, dz) *
                         Eigen::AngleAxisd(dY, Eigen::Vector3d::UnitZ()) *

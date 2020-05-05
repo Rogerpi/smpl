@@ -49,7 +49,7 @@ class CollisionDetectorAllocatorSBPL :
 {
 public:
 
-    static const std::string NAME_;
+    static const std::string NAME;
 };
 
 } // namespace collision_detection

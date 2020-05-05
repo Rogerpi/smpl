@@ -657,7 +657,7 @@ void MoveGroupCommandPanel::updateRobotVisualization()
                         contact.position.y,
                         contact.position.z) +
                 Eigen::Vector3d(0, 0, arrow_len);
-        auto arrow_transform = Eigen::Affine3d(
+        auto arrow_transform = Eigen::Isometry3d(
                 Eigen::Translation3d(arrow_pos) *
                 Eigen::AngleAxisd(M_PI / 2.0, Eigen::Vector3d::UnitY()));
 
@@ -917,7 +917,7 @@ void MoveGroupCommandPanel::getRobotCollisionMarkers(
         // roll our own markers for mesh shapes
 
         // gather all urdf collision elements (take care of some crufty stuff here)
-        std::vector<boost::shared_ptr<urdf::Collision>> collisions;
+        std::vector<std::shared_ptr<urdf::Collision>> collisions;
         if (urdf_link->collision) {
             collisions.push_back(urdf_link->collision);
         } else {

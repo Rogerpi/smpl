@@ -650,7 +650,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    cc.setWorldToModelTransform(Eigen::Affine3d::Identity());
+    cc.setWorldToModelTransform(Eigen::Isometry3d::Identity());
 
     SV_SHOW_INFO(grid.getDistanceFieldVisualization(0.2));
 
@@ -755,7 +755,7 @@ int main(int argc, char* argv[])
     }
 
     // Set the goal state...
-    Eigen::Affine3d goal_pose;
+    Eigen::Isometry3d goal_pose;
     {
         std::vector<double> goal(6, 0);
         ph.param("goal/x", goal[0], 0.0);

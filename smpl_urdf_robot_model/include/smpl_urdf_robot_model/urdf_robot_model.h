@@ -36,7 +36,7 @@ struct URDFRobotModel :
     const Link* planning_link = NULL;
 
     auto computeFK(const smpl::RobotState& state)
-        -> Eigen::Affine3d override;
+        -> Eigen::Isometry3d override;
 
     double minPosLimit(int jidx) const override;
     double maxPosLimit(int jidx) const override;

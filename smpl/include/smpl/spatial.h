@@ -56,7 +56,7 @@ using AlignedScaling2 = Eigen::AlignedScaling2d;
 using Rotation2D = Eigen::Rotation2Dd;
 
 using Projective3 = Eigen::Projective3d;
-using Affine3 = Eigen::Affine3d;
+using Affine3 = Eigen::Isometry3d;
 using Affine3Compact = Eigen::AffineCompact3d;
 using Translation3 = Eigen::Translation3d;
 using AlignedScaling3 = Eigen::AlignedScaling3d;

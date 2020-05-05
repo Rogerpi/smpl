@@ -41,9 +41,9 @@ public:
 
     /// \name Required Public Functions from ForwardKinematicsInterface
     ///@{
-    Eigen::Affine3d computeFK(const smpl::RobotState& state) override
+    Eigen::Isometry3d computeFK(const smpl::RobotState& state) override
     {
-        return Eigen::Affine3d(Eigen::Translation3d(state[0], state[1], 0.0));
+        return Eigen::Isometry3d(Eigen::Translation3d(state[0], state[1], 0.0));
     }
     ///@}
 

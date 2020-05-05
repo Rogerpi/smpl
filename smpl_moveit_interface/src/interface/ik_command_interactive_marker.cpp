@@ -121,7 +121,7 @@ void IKCommandInteractiveMarker::processInteractiveMarkerFeedback(
         }
 
         // run ik from this tip link
-        Eigen::Affine3d wrist_pose;
+        Eigen::Isometry3d wrist_pose;
         tf::poseMsgToEigen(msg->pose, wrist_pose);
 
         moveit::core::RobotState ik_state(*robot_state);
@@ -161,7 +161,7 @@ auto MakeNormalizedQuaternion(double w, double x, double y, double z)
 
 // Get the largest coordinate (x, y, or z) of the bounding box, posed at $pose.
 static
-auto GetMaxCoordOBB(const Eigen::Affine3d& origin, const double size[3]) -> double
+auto GetMaxCoordOBB(const Eigen::Isometry3d& origin, const double size[3]) -> double
 {
     double half[3] = { 0.5 * size[0], 0.5 * size[1], 0.5 * size[2] };
     Eigen::Vector3d corners[8] =
