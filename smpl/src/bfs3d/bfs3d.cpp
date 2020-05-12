@@ -154,10 +154,10 @@ bool BFS_3D::isUndiscovered(int x, int y, int z) const
     return m_distance_grid[node] == UNDISCOVERED;
 }
 
-void BFS_3D::run(int x, int y, int z)
+int BFS_3D::run(int x, int y, int z)
 {
     if (m_running) {
-        return;
+        return 0;
     }
 
     for (int i = 0; i < m_dim_xyz; i++) {
@@ -168,6 +168,9 @@ void BFS_3D::run(int x, int y, int z)
 
     // get index of start coordinate
     int origin = getNode(x, y, z);
+    if(origin == -1){
+        return 0;
+    }
 
     // initialize the queue
     m_queue_head = 0;
@@ -184,6 +187,7 @@ void BFS_3D::run(int x, int y, int z)
     });
 
     m_running = true;
+    return 1;
 }
 
 void BFS_3D::run_components(int gx, int gy, int gz)

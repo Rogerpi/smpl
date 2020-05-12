@@ -64,6 +64,7 @@ struct ManipLatticeState
 {
     RobotCoord coord;   // discrete coordinate
     RobotState state;   // corresponding continuous coordinate
+    int source;
 };
 
 inline
@@ -164,6 +165,17 @@ public:
         int state_id,
         std::vector<int>* preds,
         std::vector<int>* costs) override;
+    //Multi-Representation Multi-Heuristic implementation
+    void GetSuccsByGroup(
+        int state_id,
+        std::vector<int>* succs,
+        std::vector<int>* costs, 
+        int group) override;
+    virtual void GetPredsByGroup(
+        int state_id,
+        std::vector<int>* preds,
+        std::vector<int>* costs,
+        int group) override;
     ///@}
 
 protected:
@@ -188,11 +200,20 @@ protected:
         ManipLatticeState* HashEntry2,
         bool bState2IsGoal) const;
 
+    int cost(
+        ManipLatticeState* HashEntry1,
+        ManipLatticeState* HashEntry2,
+        double actionWeight,
+        bool bState2IsGoal) const;
+
     bool checkAction(const RobotState& state, const Action& action);
 
     bool isGoal(const RobotState& state);
 
     auto getStateVisualization(const RobotState& vars, const std::string& ns)
+        -> std::vector<visual::Marker>;
+    
+    auto getStateVisualizationByGroup(const RobotState& vars, const std::string& ns, int group)
         -> std::vector<visual::Marker>;
 
 private:

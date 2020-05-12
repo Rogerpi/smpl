@@ -96,6 +96,7 @@ bool MoveItCollisionChecker::init(
     m_robot_model = robot_model;
 
     m_var_incs.reserve(m_robot_model->getPlanningJoints().size());
+    ROS_INFO_STREAM("Joints " << m_robot_model->getPlanningJoints());
     for (auto& joint_name : m_robot_model->getPlanningJoints()) {
         m_var_incs.push_back(smpl::angles::to_radians(2.0));
     }

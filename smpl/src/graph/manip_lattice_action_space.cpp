@@ -142,7 +142,7 @@ bool ManipLatticeActionSpace::load(const std::string& action_filename)
         SMPL_WARN("# of motion prims == # of short distance motion prims. No long distance motion prims set.");
     }
 
-    std::vector<double> mprim(ncols, 0);
+    std::vector<double> mprim(ncols - 2, 0); // Group & weight params
 
     bool have_short_dist_mprims = short_mprims > 0;
     if (have_short_dist_mprims) {
@@ -153,7 +153,7 @@ bool ManipLatticeActionSpace::load(const std::string& action_filename)
 
     for (int i = 0; i < nrows; ++i) {
         // read joint delta
-        for (int j = 0; j < ncols; ++j) {
+        for (int j = 0; j < ncols - 2; ++j) {
             double d;
             if (fscanf(fCfg, "%lf", &d) < 1)  {
                 SMPL_ERROR("Parsed string has length < 1.");
@@ -167,10 +167,23 @@ bool ManipLatticeActionSpace::load(const std::string& action_filename)
             SMPL_DEBUG("Got %0.3f deg -> %0.3f rad", d, mprim[j]);
         }
 
+        int group;
+        if(fscanf(fCfg, "%i", &group)<1)
+        {
+            SMPL_ERROR("No planning group defiend for this MP!");
+            group = smpl::GroupType::ANY;
+        }
+        double weight;
+        if(fscanf(fCfg, "%lf", &weight)<1)
+        {
+            SMPL_ERROR("No weight defiend for this MP!");
+            weight = 1.0;
+        }
+        
         if (i < (nrows - short_mprims)) {
-            addMotionPrim(mprim, false);
+            addMotionPrim(mprim, group, weight, false);
         } else {
-            addMotionPrim(mprim, true);
+            addMotionPrim(mprim, group, weight, true);
         }
     }
 
@@ -185,6 +198,7 @@ bool ManipLatticeActionSpace::load(const std::string& action_filename)
 ///     to the action set
 void ManipLatticeActionSpace::addMotionPrim(
     const std::vector<double>& mprim,
+    int group, double weight,
     bool short_dist_mprim,
     bool add_converse)
 {
@@ -197,6 +211,8 @@ void ManipLatticeActionSpace::addMotionPrim(
     }
 
     m.action.push_back(mprim);
+    m.group = smpl::GroupType(group);
+    m.weight = weight;
     m_mprims.push_back(m);
 
     if (add_converse) {
@@ -207,6 +223,14 @@ void ManipLatticeActionSpace::addMotionPrim(
         }
         m_mprims.push_back(m);
     }
+}
+
+void ManipLatticeActionSpace::addMotionPrim(
+    const std::vector<double>& mprim,
+    bool short_dist_mprim,
+    bool add_converse)
+{
+    addMotionPrim(mprim, GroupType::ANY, 1, short_dist_mprim, add_converse);
 }
 
 /// \brief Remove long and short motion primitives and disable adaptive motions.
@@ -220,15 +244,21 @@ void ManipLatticeActionSpace::clear()
     MotionPrimitive mprim;
 
     mprim.type = MotionPrimitive::SNAP_TO_RPY;
-    mprim.action.clear();
+    mprim.action.clear();               // TODO:
+    mprim.group = smpl::GroupType::ANY; // I don't like this for multiple end-effectors
+    mprim.weight = 0.5;                 // These MP should be parsed from file
     m_mprims.push_back(mprim);
 
     mprim.type = MotionPrimitive::SNAP_TO_XYZ;
     mprim.action.clear();
+    mprim.group = smpl::GroupType::ANY; 
+    mprim.weight = 0.5;
     m_mprims.push_back(mprim);
 
     mprim.type = MotionPrimitive::SNAP_TO_XYZ_RPY;
     mprim.action.clear();
+     mprim.group = smpl::GroupType::ANY; 
+    mprim.weight = 0.5;
     m_mprims.push_back(mprim);
 
     for (int i = 0; i < MotionPrimitive::NUMBER_OF_MPRIM_TYPES; ++i) {
@@ -345,6 +375,25 @@ bool ManipLatticeActionSpace::apply(
     return true;
 }
 
+bool ManipLatticeActionSpace::apply(
+    const RobotState& parent,
+    std::vector<Action>& actions, ActionsWeight& weights, int group)
+{
+    double goal_dist, start_dist;
+    std::tie(start_dist, goal_dist) = getStartGoalDistances(parent);
+
+    for (auto& prim : m_mprims) {
+        if (group == GroupType::ANY || prim.group == GroupType::ANY || prim.group == group){
+            (void)getAction(parent, goal_dist, start_dist, prim, actions);
+            weights.push_back(prim.weight);    
+        }
+    }
+    if (actions.empty()) {
+        SMPL_WARN("No motion primitives specified");
+    }
+    return true;
+}
+
 bool ManipLatticeActionSpace::getAction(
     const RobotState& parent,
     double goal_dist,
@@ -403,6 +452,7 @@ bool ManipLatticeActionSpace::getAction(
         // solution
         Action action = { planningSpace()->goal().angles };
         actions.push_back(std::move(action));
+        SBPL_ERROR("7DOF goal as solution. Is this valid for Girona500?"); //TODO: Check 
 
         return true;
     }
@@ -423,6 +473,17 @@ bool ManipLatticeActionSpace::applyMotionPrimitive(
             return false;
         }
 
+        // Converting MPs from AUV frame to world frame
+        Eigen::Matrix2d worldToBody;
+        worldToBody(0,0) = cos(state[3]);
+        worldToBody(0,1) = -sin(state[3]);
+        worldToBody(1,0) = sin(state[3]);
+        worldToBody(1,1) = cos(state[3]);
+        Eigen::Vector2d actionInWorldFrame = worldToBody*Eigen::Vector2d(action[i][0],action[i][1]);
+        action[i][0] = actionInWorldFrame[0];
+        action[i][1] = actionInWorldFrame[1];
+
+        //Apply MP
         for (size_t j = 0; j < action[i].size(); ++j) {
             action[i][j] = action[i][j] + state[j];
         }

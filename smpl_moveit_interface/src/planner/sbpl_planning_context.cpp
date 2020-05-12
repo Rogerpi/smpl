@@ -823,7 +823,7 @@ bool SBPLPlanningContext::init(const std::map<std::string, std::string>& config)
     m_planner_id = search_name + "." + heuristic_name + "." + graph_name;
     ROS_DEBUG_NAMED(PP_LOGGER, " -> Request planner '%s'", m_planner_id.c_str());
 
-    m_use_grid = (heuristic_name == "bfs" || heuristic_name == "mfbfs" || heuristic_name == "bfs_egraph");
+    m_use_grid = (heuristic_name == "bfs" || heuristic_name == "mfbfs" || heuristic_name == "bfs_egraph" || heuristic_name == "mbfs");
 
     ROS_DEBUG_NAMED(PP_LOGGER, " -> Required Parameters Found");
 

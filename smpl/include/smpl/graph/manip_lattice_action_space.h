@@ -70,6 +70,12 @@ public:
         bool short_dist_mprim,
         bool add_converse = true);
 
+    void addMotionPrim(
+        const std::vector<double>& mprim,
+        int group, double weight,
+        bool short_dist_mprim,
+        bool add_converse = true);
+
     void clear();
 
     const_iterator begin() const { return m_mprims.begin(); }
@@ -91,6 +97,7 @@ public:
     /// \name Required Public Functions from ActionSpace
     ///@{
     bool apply(const RobotState& parent, std::vector<Action>& actions) override;
+    bool apply(const RobotState& parent, std::vector<Action>& actions, ActionsWeight& weights, int group);
     ///@}
 
 protected:
@@ -132,6 +139,12 @@ protected:
 
     auto getStartGoalDistances(const RobotState& state)
         -> std::pair<double, double>;
+
+    // heterogeneous comparison:
+    struct MotionPrimitiveComparator
+    {
+        bool operator() ( const MotionPrimitive& mp, int id ) const { return mp.group == id; }
+    };
 };
 
 } // namespace smpl

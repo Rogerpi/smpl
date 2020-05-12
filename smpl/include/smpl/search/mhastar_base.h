@@ -77,7 +77,7 @@ std::ostream &operator<<(std::ostream &o, const MHASearchState &s)
             "closed_in_add: " << std::boolalpha << s.closed_in_add << " }";
     return o;
 }
-
+ 
 template <typename Derived>
 class MHAStarBase : public SBPLPlanner
 {

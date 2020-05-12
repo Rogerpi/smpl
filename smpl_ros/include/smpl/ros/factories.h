@@ -64,6 +64,12 @@ auto MakeAdaptiveWorkspaceLattice(
 // Heuristic Factories //
 /////////////////////////
 
+auto MakeMultiBFSHeuristic(
+    RobotPlanningSpace* space,
+    const PlanningParams& params,
+    const OccupancyGrid* grid)
+    -> std::unique_ptr<RobotHeuristic>;
+
 auto MakeMultiFrameBFSHeuristic(
     RobotPlanningSpace* space,
     const PlanningParams& params,
@@ -108,6 +114,12 @@ auto MakeARAStar(
     -> std::unique_ptr<SBPLPlanner>;
 
 auto MakeAWAStar(
+    RobotPlanningSpace* space,
+    RobotHeuristic* heuristic,
+    const PlanningParams& params)
+    -> std::unique_ptr<SBPLPlanner>;
+
+auto MakeMARAStar(
     RobotPlanningSpace* space,
     RobotHeuristic* heuristic,
     const PlanningParams& params)

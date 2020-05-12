@@ -58,6 +58,8 @@ struct MotionPrimitive
 
     Type type;
     Action action;
+    GroupType group;
+    double weight;
 
     void print() const;
 };

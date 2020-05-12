@@ -93,6 +93,14 @@ struct Color {
     float g;
     float b;
     float a;
+
+    Color(){};
+    Color(float red, float green, float blue, float alpha){
+        r = red;
+        g = green;
+        b = blue;
+        a = alpha;
+    };
 };
 
 using Colors = boost::variant<Color, std::vector<Color>>;

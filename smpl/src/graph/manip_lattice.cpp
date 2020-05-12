@@ -225,7 +225,8 @@ void ManipLattice::GetSuccs(
     int goal_succ_count = 0;
 
     std::vector<Action> actions;
-    if (!m_actions->apply(parent_entry->state, actions)) {
+    ActionsWeight weights;
+    if (!m_actions->apply(parent_entry->state, actions, weights, -1)) {
         SMPL_WARN("Failed to get actions");
         return;
     }
@@ -266,7 +267,7 @@ void ManipLattice::GetSuccs(
         } else {
             succs->push_back(succ_state_id);
         }
-        costs->push_back(cost(parent_entry, succ_entry, is_goal_succ));
+        costs->push_back(cost(parent_entry, succ_entry, weights[i], is_goal_succ));
 
         // log successor details
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "      succ: %zu", i);
@@ -279,6 +280,97 @@ void ManipLattice::GetSuccs(
     if (goal_succ_count > 0) {
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "Got %d goal successors!", goal_succ_count);
     }
+}
+
+void ManipLattice::GetSuccsByGroup(
+        int state_id,
+        std::vector<int>* succs,
+        std::vector<int>* costs, 
+        int group)
+{
+    assert(state_id >= 0 && state_id < m_states.size() && "state id out of bounds");
+    assert(succs && costs && "successor buffer is null");
+    assert(m_actions && "action space is uninitialized");
+
+    SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "expanding state %d", state_id);
+
+    // goal state should be absorbing
+    if (state_id == m_goal_state_id) {
+        return;
+    }
+
+    ManipLatticeState* parent_entry = m_states[state_id];
+
+    assert(parent_entry);
+    assert(parent_entry->coord.size() >= robot()->jointVariableCount());
+
+    // log expanded state details
+    SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "  coord: " << parent_entry->coord);
+    SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "  angles: " << parent_entry->state);
+
+    auto* vis_name = "expansion";
+    SV_SHOW_DEBUG_NAMED(vis_name, getStateVisualizationByGroup(parent_entry->state, vis_name, group));
+
+    int goal_succ_count = 0;
+
+    std::vector<Action> actions;
+    ActionsWeight weights;
+    if (!m_actions->apply(parent_entry->state, actions, weights, group)) {
+        SMPL_WARN("Failed to get actions");
+        return;
+    }
+
+    SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "  actions: %zu", actions.size());
+
+    // check actions for validity
+    RobotCoord succ_coord(robot()->jointVariableCount(), 0);
+    for (size_t i = 0; i < actions.size(); ++i) {
+        auto& action = actions[i];
+
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "    action %zu:", i);
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "      waypoints: %zu", action.size());
+
+        if (!checkAction(parent_entry->state, action)) {
+            continue;
+        }
+
+        // compute destination coords
+        stateToCoord(action.back(), succ_coord);
+
+        // get the successor
+
+        // check if hash entry already exists, if not then create one
+        int succ_state_id = getOrCreateState(succ_coord, action.back());
+        ManipLatticeState* succ_entry = getHashEntry(succ_state_id);
+        succ_entry->source = group;
+
+        // check if this state meets the goal criteria
+        auto is_goal_succ = isGoal(action.back());
+        if (is_goal_succ) {
+            // update goal state
+            ++goal_succ_count;
+        }
+
+        // put successor on successor list with the proper cost
+        if (is_goal_succ) {
+            succs->push_back(m_goal_state_id);
+        } else {
+            succs->push_back(succ_state_id);
+        }
+        costs->push_back(cost(parent_entry, succ_entry, weights[i], is_goal_succ));
+
+        // log successor details
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "      succ: %zu", i);
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "        id: %5i", succ_state_id);
+        SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "        coord: " << succ_coord);
+        SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "        state: " << succ_entry->state);
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "        cost: %5d", cost(parent_entry, succ_entry, is_goal_succ));
+    }
+
+    if (goal_succ_count > 0) {
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "Got %d goal successors!", goal_succ_count);
+    }
+
 }
 
 Stopwatch GetLazySuccsStopwatch("GetLazySuccs", 10);
@@ -462,6 +554,15 @@ void ManipLattice::GetPreds(
     SMPL_WARN("GetPreds unimplemented");
 }
 
+void ManipLattice::GetPredsByGroup(
+    int state_id,
+    std::vector<int>* preds,
+    std::vector<int>* costs,
+    int group)
+{
+    SMPL_WARN("GetPredsByGroup unimplemented");
+}
+
 // angles are counterclockwise from 0 to 360 in radians, 0 is the center of bin
 // 0, ...
 void ManipLattice::coordToState(
@@ -593,6 +694,16 @@ int ManipLattice::cost(
 {
     auto DefaultCostMultiplier = 1000;
     return DefaultCostMultiplier;
+}
+
+int ManipLattice::cost(
+    ManipLatticeState* HashEntry1,
+    ManipLatticeState* HashEntry2,
+    double actionWeight,
+    bool bState2IsGoal) const
+{
+    auto DefaultCostMultiplier = 1000;
+    return DefaultCostMultiplier*actionWeight;
 }
 
 bool ManipLattice::checkAction(const RobotState& state, const Action& action)
@@ -770,6 +881,26 @@ auto ManipLattice::getStateVisualization(
     auto markers = collisionChecker()->getCollisionModelVisualization(state);
     for (auto& marker : markers) {
         marker.ns = ns;
+    }
+    return markers;
+}
+
+auto ManipLattice::getStateVisualizationByGroup(const RobotState& state, const std::string& ns, int group)
+        -> std::vector<visual::Marker>
+{
+    auto markers = collisionChecker()->getCollisionModelVisualization(state);
+    for (auto& marker : markers) {
+        switch (group)
+        {
+        case GroupType::BASE:
+        case GroupType::BASE_ISO:
+            marker.color = visual::Color(0,0,1,1);
+            break;
+        default:
+            marker.color = visual::Color(1,0,0,1);
+            break;
+       }
+       marker.ns = ns;    
     }
     return markers;
 }
@@ -1010,13 +1141,15 @@ Extension* ManipLattice::getExtension(size_t class_code)
     {
         return this;
     }
-
     if (class_code == GetClassCode<PointProjectionExtension>() ||
         class_code == GetClassCode<PoseProjectionExtension>())
     {
         if (m_fk_iface) {
             return this;
         }
+    }
+    if (class_code == GetClassCode<ManipLattice>()){ // Workaround for group methods 
+        return this;                                 // not implemented in DiscreteSpaceInfo
     }
 
     return nullptr;

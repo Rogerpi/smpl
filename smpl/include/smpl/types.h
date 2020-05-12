@@ -166,6 +166,26 @@ public:
 
 using Action = std::vector<RobotState>;
 
+// Multi Representation 
+typedef std::vector<double> ActionsWeight;
+enum GroupType
+{
+    FAILURE = -2,
+    ANY = -1, 
+    BASE = 0,
+    ARM = 1,
+    BASE_ISO = 2
+} ;
+
+enum BaseGroupHeuristic
+{
+    NONE = -1,
+    B1,
+    B2,
+    B3,
+    B4
+};
+
 } // namespace smpl
 
 #endif

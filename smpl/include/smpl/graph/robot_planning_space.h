@@ -47,11 +47,12 @@
 #include <smpl/spatial.h>
 #include <smpl/types.h>
 #include <smpl/graph/goal_constraint.h>
+#include <smpl/console/console.h>
 
 namespace smpl {
 
 class RobotHeuristic;
-
+ 
 class RobotPlanningSpace :
     public DiscreteSpaceInformation,
     public virtual Extension
@@ -114,10 +115,32 @@ public:
         std::vector<int>* succs,
         std::vector<int>* costs) override = 0;
 
+    virtual void GetSuccsByGroup(
+        int state_id,
+        std::vector<int>* succs,
+        std::vector<int>* costs, 
+        int group)
+    {
+        SMPL_WARN("GetSuccsByGroup not implemented, calling GetSuccs by default");
+        GetSuccs(state_id, succs, costs);
+    }
+
+    
+
     virtual void GetPreds(
         int state_id,
         std::vector<int>* preds,
         std::vector<int>* costs) override = 0;
+    
+    virtual void GetPredsByGroup(
+        int state_id,
+        std::vector<int>* preds,
+        std::vector<int>* costs,
+        int group)
+    {
+        SMPL_WARN("GetPredsByGroup not implemented, calling GetPreds by default");
+        GetPreds(state_id, preds, costs);
+    }
 
     virtual void PrintState(
         int state_id,

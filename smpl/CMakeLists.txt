@@ -157,6 +157,7 @@ set(SMPL_LIBRARY_SOURCES
     src/heuristic/multi_frame_bfs_heuristic.cpp
     src/heuristic/sparse_egraph_dijkstra_heuristic.cpp
     src/heuristic/zero_heuristic.cpp
+    src/heuristic/multi_bfs_heuristic.cpp
     src/search/fmhastar.cpp
     src/search/meta_mhastar_dts.cpp
     src/search/mhastarpp.cpp
@@ -168,6 +169,7 @@ set(SMPL_LIBRARY_SOURCES
     src/search/lazy_mhastar.cpp
     src/search/smhastar.cpp
     src/search/awastar.cpp
+    src/search/marastar.cpp
     src/steer/steer.cpp
     src/unicycle/dubins.cpp
     src/unicycle/unicycle.cpp)

@@ -17,9 +17,11 @@
 #include <smpl/heuristic/generic_egraph_heuristic.h>
 #include <smpl/heuristic/joint_dist_heuristic.h>
 #include <smpl/heuristic/multi_frame_bfs_heuristic.h>
+#include <smpl/heuristic/multi_bfs_heuristic.h>
 #include <smpl/planning_params.h>
 #include <smpl/robot_model.h>
 #include <smpl/search/adaptive_planner.h>
+#include <smpl/search/marastar.h>
 #include <smpl/search/arastar.h>
 #include <smpl/search/awastar.h>
 #include <smpl/search/experience_graph_planner.h>
@@ -482,6 +484,25 @@ auto MakeAdaptiveWorkspaceLattice(
     return std::move(space);
 }
 
+auto MakeMultiBFSHeuristic(
+    RobotPlanningSpace* space,
+    const PlanningParams& params,
+    const OccupancyGrid* grid)
+    -> std::unique_ptr<RobotHeuristic>
+{
+    auto h = make_unique<MultiBfsHeuristic>();
+    h->setCostPerCell(params.cost_per_cell);
+    double inflation_radius, base_inflation_radius;
+    params.param("bfs_inflation_radius", inflation_radius, 0.0);
+    params.param("bfs_base_inflation_radius", base_inflation_radius, 0.0);
+    h->setInflationRadius(inflation_radius);
+    h->setBaseInflationRadius(base_inflation_radius);
+    if (!h->init(space, grid)) {
+        return nullptr;
+    }
+    return std::move(h);
+};
+
 auto MakeMultiFrameBFSHeuristic(
     RobotPlanningSpace* space,
     const PlanningParams& params,
@@ -661,6 +682,62 @@ auto MakeAWAStar(
     double epsilon;
     params.param("epsilon", epsilon, 1.0);
     search->set_initialsolution_eps(epsilon);
+    return std::move(search);
+}
+
+
+auto MakeMARAStar(
+    RobotPlanningSpace* space,
+    RobotHeuristic* heuristic,
+    const PlanningParams& params)
+    -> std::unique_ptr<SBPLPlanner>
+{
+    const bool forward_search = true;
+    auto search = make_unique<MARAStar>(space, heuristic);
+
+    double epsilon;
+    params.param("epsilon", epsilon, 1.0);
+    search->set_initialsolution_eps(epsilon);
+
+    bool search_mode;
+    params.param("search_mode", search_mode, false);
+    search->set_search_mode(search_mode);
+
+    bool allow_partial_solutions;
+    if (params.getParam("allow_partial_solutions", allow_partial_solutions)) {
+        search->allowPartialSolutions(allow_partial_solutions);
+    }
+
+    double target_eps;
+    if (params.getParam("target_epsilon", target_eps)) {
+        search->setTargetEpsilon(target_eps);
+    }
+
+    double delta_eps;
+    if (params.getParam("delta_epsilon", delta_eps)) {
+        search->setDeltaEpsilon(delta_eps);
+    }
+
+    bool improve_solution;
+    if (params.getParam("improve_solution", improve_solution)) {
+        search->setImproveSolution(improve_solution);
+    }
+
+    bool bound_expansions;
+    if (params.getParam("bound_expansions", bound_expansions)) {
+        search->setBoundExpansions(bound_expansions);
+    }
+
+    double repair_time;
+    if (params.getParam("repair_time", repair_time)) {
+        search->setAllowedRepairTime(repair_time);
+    }
+
+    double switch_dist;
+    if (params.getParam("switch_dist", switch_dist)) {
+        search->setSwitchDistance(switch_dist);
+    }
+
     return std::move(search);
 }
 

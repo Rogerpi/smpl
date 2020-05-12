@@ -53,6 +53,7 @@
 #include <smpl/heuristic/bfs_heuristic.h>
 #include <smpl/heuristic/egraph_bfs_heuristic.h>
 #include <smpl/heuristic/multi_frame_bfs_heuristic.h>
+#include <smpl/heuristic/multi_bfs_heuristic.h>
 #include <smpl/post_processing.h>
 #include <smpl/stl/memory.h>
 #include <smpl/time.h>
@@ -246,6 +247,13 @@ PlannerInterface::PlannerInterface(
     // Setup Heuristic Factories //
     ///////////////////////////////
 
+    m_heuristic_factories["mbfs"] = [this](
+        RobotPlanningSpace* space,
+        const PlanningParams& p)
+    {
+        return MakeMultiBFSHeuristic(space, p, m_grid);
+    };
+    
     m_heuristic_factories["mfbfs"] = [this](
         RobotPlanningSpace* space,
         const PlanningParams& p)
@@ -283,6 +291,7 @@ PlannerInterface::PlannerInterface(
     m_planner_factories["larastar"] = MakeLARAStar;
     m_planner_factories["egwastar"] = MakeEGWAStar;
     m_planner_factories["padastar"] = MakePADAStar;
+    m_planner_factories["marastar"] = MakeMARAStar;
 }
 
 PlannerInterface::~PlannerInterface()
@@ -1313,6 +1322,8 @@ auto PlannerInterface::getBfsValuesVisualization() const -> visual::Marker
         return hbfs->getValuesVisualization();
     } else if (auto* hmfbfs = dynamic_cast<MultiFrameBfsHeuristic*>(first->second.get())) {
         return hmfbfs->getValuesVisualization();
+    } else if (auto* mfbfs = dynamic_cast<MultiBfsHeuristic*>(first->second.get())) {
+        return mfbfs->getValuesVisualization();
     } else if (auto* debfs = dynamic_cast<DijkstraEgraphHeuristic3D*>(first->second.get())) {
         return debfs->getValuesVisualization();
     } else {
@@ -1332,6 +1343,8 @@ auto PlannerInterface::getBfsWallsVisualization() const -> visual::Marker
         return hbfs->getWallsVisualization();
     } else if (auto* hmfbfs = dynamic_cast<MultiFrameBfsHeuristic*>(first->second.get())) {
         return hmfbfs->getWallsVisualization();
+    } else if(auto* mhbfs = dynamic_cast<MultiBfsHeuristic*>(first->second.get())){
+        return mhbfs->getWallsVisualization();
     } else if (auto* debfs = dynamic_cast<DijkstraEgraphHeuristic3D*>(first->second.get())) {
         return debfs->getWallsVisualization();
     } else {

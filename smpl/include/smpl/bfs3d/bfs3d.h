@@ -64,11 +64,11 @@ public:
     //         otherwise
     bool escapeCell(int x, int y, int z);
 
-    void run(int x, int y, int z);
+    int run(int x, int y, int z);
 
     /// \brief Run the BFS starting from a variable number of cells
     template <typename InputIt>
-    void run(InputIt cells_begin, InputIt cells_end);
+    int run(InputIt cells_begin, InputIt cells_end);
 
     void run_components(int gx, int gy, int gz);
 
@@ -153,10 +153,10 @@ inline bool BFS_3D::inBounds(int x, int y, int z) const
 }
 
 template <typename InputIt>
-void BFS_3D::run(InputIt cells_begin, InputIt cells_end)
+int BFS_3D::run(InputIt cells_begin, InputIt cells_end)
 {
     if (m_running) {
-        return;
+        return 0;
     }
 
     for (int i = 0; i < m_dim_xyz; i++) {
@@ -167,6 +167,9 @@ void BFS_3D::run(InputIt cells_begin, InputIt cells_end)
 
     m_queue_head = 0;
 
+    //num goals counter
+    int numGoals = 0;
+
     // seed the search with all start cells
     int xyz[3];
     int ind = 0;
@@ -174,8 +177,11 @@ void BFS_3D::run(InputIt cells_begin, InputIt cells_end)
     for (auto it = cells_begin; it != cells_end;) {
         if (ind == 3) {
             auto origin = getNode(xyz[0], xyz[1], xyz[2]);
-            m_queue[start_count++] = origin;
-            m_distance_grid[origin] = 0;
+            if( origin != -1){
+                m_queue[start_count++] = origin;
+                m_distance_grid[origin] = 0;
+                numGoals++;
+            }
             ind = 0;
         } else {
             xyz[ind++] = *it++;
@@ -191,6 +197,7 @@ void BFS_3D::run(InputIt cells_begin, InputIt cells_end)
     });
 
     m_running = true;
+    return numGoals;
 }
 
 inline int BFS_3D::getNode(int x, int y, int z) const
