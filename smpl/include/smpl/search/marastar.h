@@ -5,6 +5,7 @@
 // standard includes
 #include <assert.h>
 #include <algorithm>
+#include <stdlib.h>
 
 // system includes
 #include <sbpl/heuristics/heuristic.h>
@@ -128,6 +129,28 @@ private:
         SearchState* bp; 
         bool incons;
         bool merged;
+
+        std::string info() const{
+            std::string s;
+            s = "id " + std::to_string(state_id);
+            return s;
+        }
+
+        std::string info(int idx) const{
+            std::string s;
+            s = "id " + std::to_string(state_id)
+            //+ "  h " + std::to_string(h[idx])
+            //+ " gh " + std::to_string(g + h[idx])
+            ;
+            if(iteration_closed[idx]){
+                s += " closed";
+                if (bp != NULL)
+                    s += " from " + std::to_string(bp->state_id);
+            }
+            if(incons)
+                s += " incons";
+            return s;
+        }
     };
 
     struct SearchStateCompareBase

@@ -382,7 +382,8 @@ void multi_index_intrusive_heap<T, Compare>::print(int idx) const
 {
     printf("[ null, ");
     for (int i = 1; i < m_data.size(); ++i) {
-        printf(" (%d, %p)", m_data[i]->m_heap_index[idx], m_data[i]);
+        const std::string& info = m_data[i]->info(idx);
+        printf(" (%d, %s)", m_data[i]->m_heap_index[idx], info.c_str());
         if (i == m_data.size() - 1) {
             printf(" ");
         } else {

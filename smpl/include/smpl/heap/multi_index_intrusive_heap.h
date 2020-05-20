@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <sstream> //for std::stringstream
 namespace smpl {
 
 template <class T, class Compare>
@@ -13,6 +14,17 @@ struct multi_index_heap_element
 {
 
     multi_index_heap_element() : m_heap_index({0,0}) { }
+    virtual std::string info() const{
+        const void * address = static_cast<const void*>(this);
+        std::stringstream ss;
+        ss << "virtual ";
+        ss << address;
+        return ss.str();
+    }
+
+    virtual std::string info(int idx) const{
+        return info();
+    }
         
         
 private:
