@@ -158,6 +158,7 @@ set(SMPL_LIBRARY_SOURCES
     src/heuristic/sparse_egraph_dijkstra_heuristic.cpp
     src/heuristic/zero_heuristic.cpp
     src/heuristic/multi_bfs_heuristic.cpp
+    src/heuristic/bfs_with_orientation_heuristic.cpp
     src/search/fmhastar.cpp
     src/search/meta_mhastar_dts.cpp
     src/search/mhastarpp.cpp

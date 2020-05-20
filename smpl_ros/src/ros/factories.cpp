@@ -18,6 +18,7 @@
 #include <smpl/heuristic/joint_dist_heuristic.h>
 #include <smpl/heuristic/multi_frame_bfs_heuristic.h>
 #include <smpl/heuristic/multi_bfs_heuristic.h>
+#include <smpl/heuristic/bfs_with_orientation_heuristic.h>
 #include <smpl/planning_params.h>
 #include <smpl/robot_model.h>
 #include <smpl/search/adaptive_planner.h>
@@ -620,6 +621,24 @@ auto MakeJointDistEGraphHeuristic(
     double egw;
     params.param("egraph_epsilon", egw, 1.0);
     h->setWeightEGraph(egw);
+    return std::move(h);
+};
+
+//Custom, probably useless heuristics
+auto MakeBFSWithOrientationHeuristic(
+    RobotPlanningSpace* space,
+    const PlanningParams& params,
+    const OccupancyGrid* grid)
+    -> std::unique_ptr<RobotHeuristic>
+{
+    auto h = make_unique<BfsRPYHeuristic>();
+    h->setCostPerCell(params.cost_per_cell);
+    double inflation_radius;
+    params.param("bfs_inflation_radius", inflation_radius, 0.0);
+    h->setInflationRadius(inflation_radius);
+    if (!h->init(space, grid)) {
+        return nullptr;
+    }
     return std::move(h);
 };
 

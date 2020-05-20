@@ -54,6 +54,7 @@
 #include <smpl/heuristic/egraph_bfs_heuristic.h>
 #include <smpl/heuristic/multi_frame_bfs_heuristic.h>
 #include <smpl/heuristic/multi_bfs_heuristic.h>
+#include <smpl/heuristic/bfs_with_orientation_heuristic.h>
 #include <smpl/post_processing.h>
 #include <smpl/stl/memory.h>
 #include <smpl/time.h>
@@ -280,6 +281,13 @@ PlannerInterface::PlannerInterface(
     };
 
     m_heuristic_factories["joint_distance_egraph"] = MakeJointDistEGraphHeuristic;
+
+    m_heuristic_factories["bfs_rpy"] = [this](
+        RobotPlanningSpace* space,
+        const PlanningParams& p)
+    {
+        return MakeBFSWithOrientationHeuristic(space, p, m_grid);
+    };
 
     /////////////////////////////
     // Setup Planner Factories //
@@ -771,9 +779,9 @@ bool PlannerInterface::solve(
         SMPL_ERROR("Planned path is invalid");
     }
 
-    postProcessPath(path);
     SV_SHOW_INFO_NAMED("trajectory", makePathVisualization(path));
-
+    postProcessPath(path);
+    
     SMPL_DEBUG_NAMED(PI_LOGGER, "smoothed path:");
     for (size_t pidx = 0; pidx < path.size(); ++pidx) {
         auto& point = path[pidx];

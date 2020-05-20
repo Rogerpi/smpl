@@ -103,6 +103,13 @@ auto MakeJointDistEGraphHeuristic(
     const PlanningParams& params)
     -> std::unique_ptr<RobotHeuristic>;
 
+// Custom, probably useless heuristics
+auto MakeBFSWithOrientationHeuristic(
+    RobotPlanningSpace* space,
+    const PlanningParams& param,
+    const OccupancyGrid* grid)
+    -> std::unique_ptr<RobotHeuristic>;
+
 //////////////////////
 // Search Factories //
 //////////////////////
