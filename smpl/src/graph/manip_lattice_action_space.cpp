@@ -382,10 +382,14 @@ bool ManipLatticeActionSpace::apply(
     double goal_dist, start_dist;
     std::tie(start_dist, goal_dist) = getStartGoalDistances(parent);
 
+    std::vector<Action> act;
     for (auto& prim : m_mprims) {
         if (group == GroupType::ANY || prim.group == GroupType::ANY || prim.group == group){
-            (void)getAction(parent, goal_dist, start_dist, prim, actions);
-            weights.push_back(prim.weight);    
+            act.clear();
+            if(getAction(parent, goal_dist, start_dist, prim, act)){
+                actions.insert(actions.end(), act.begin(), act.end());
+                weights.push_back(prim.weight);
+            }
         }
     }
     if (actions.empty()) {
