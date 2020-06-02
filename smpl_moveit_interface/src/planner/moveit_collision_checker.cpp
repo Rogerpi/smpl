@@ -113,6 +113,8 @@ bool MoveItCollisionChecker::init(
     ph.param("enable_ccd", m_enabled_ccd, false);
     ROS_INFO("enable_ccd: %s", m_enabled_ccd ? "true" : "false");
 
+    m_use_partial_collisions = false;
+
     return true;
 }
 
@@ -152,6 +154,9 @@ bool MoveItCollisionChecker::isStateValid(
     auto must_update = has_feasibility_predicate | m_has_path_constraints;
 
     if (must_update) {
+        if(m_use_partial_collisions){
+            ROS_ERROR("UNIMPLEMENTED MUST UPDATE FOR PARTIAL COLLISIONS");
+        }
         // Obnoxiously, we need to manually flush transform updates here. While
         // isStateColliding has an overload that accepts a non-const reference
         // to RobotState, the sister functions isStateFeasible,
@@ -165,8 +170,29 @@ bool MoveItCollisionChecker::isStateValid(
     } else {
         // Here, the reference state is passed as a non-const reference,
         // allowing transforms to be updated on-demand.
-        return !m_scene->isStateColliding(
-                *m_ref_state, m_robot_model->planningGroupName(), verbose);
+        bool isCollision = m_scene->isStateColliding(
+            *m_ref_state, m_robot_model->planningGroupName(), verbose);
+
+        if(m_use_partial_collisions && isCollision){
+            collision_detection::CollisionResult::ContactMap cmap;
+            m_scene->getCollidingPairs(cmap, *m_ref_state);
+            isCollision = false;
+            for(auto& c : cmap){
+                bool found = false;
+                for(auto & d : m_disabled_links){
+                    if(c.first.first.compare(d) == 0 || c.first.second.compare(d) == 0){
+                        found = true;
+                        ROS_ERROR_STREAM("skip collision: " << c.first.first << " " << c.first.second);
+                        break;
+                    }
+                }
+                if(!found){
+                    return false;
+                }
+           }
+           return true; // Valid
+        }
+        return !isCollision;
     }
 }
 
@@ -311,6 +337,29 @@ int MoveItCollisionChecker::interpolatePathFast(
     }
 
     return waypoint_count;
+}
+
+bool MoveItCollisionChecker::setDisabledLinks(const std::vector<std::string>& links)
+{
+    // TODO: Check valid links (exists && have collisions)
+    m_disabled_links = links;
+    if(m_disabled_links.empty() && m_use_partial_collisions){
+        ROS_WARN("Empty disabled links list. Partial collision disabled");
+        m_use_partial_collisions = false;
+    }
+    ROS_DEBUG_STREAM("Disabled Links List: " << m_disabled_links);
+    ROS_DEBUG_STREAM("Status: " << (m_use_partial_collisions ? "ON" : "OFF" ));
+    return true;
+}
+
+bool MoveItCollisionChecker::useDisabledLinks(bool use_disabled_links){
+    if(m_disabled_links.empty()){
+        ROS_DEBUG("Using disabled links: OFF. List is empty");
+        return false;
+    }
+    m_use_partial_collisions = use_disabled_links;
+    ROS_DEBUG("Using disabled links: ON");
+    return true;
 }
 
 auto MoveItCollisionChecker::getCollisionModelVisualization(

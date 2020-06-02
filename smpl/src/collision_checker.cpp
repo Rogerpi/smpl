@@ -48,4 +48,14 @@ auto CollisionChecker::getCollisionModelVisualization(const RobotState& state)
     return { };
 }
 
+bool CollisionChecker::setDisabledLinks(const std::vector<std::string>& links){
+    throw("Disable Links not implemented for CollisionChecker");
+    return false;
+}
+
+bool CollisionChecker::useDisabledLinks(bool use_disabled_links){
+    throw("Disable Links not implemented for CollisionChecker");
+    return false;
+}
+
 } // namespace smpl

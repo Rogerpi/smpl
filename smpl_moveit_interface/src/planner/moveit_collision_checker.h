@@ -84,6 +84,13 @@ public:
         std::vector<smpl::RobotState>& opath) override;
     ///@}
 
+    /// \name Dual-Arm planner specific reimplemented functions
+    ///@{
+    bool setDisabledLinks(const std::vector<std::string>& links) override;
+
+    bool useDisabledLinks(bool use_disabled_links) override;
+    ///@}
+
     /// \name Reimplemented Functions from CollisionChecker
     ///@{
     auto getCollisionModelVisualization(const smpl::RobotState& angles)
@@ -96,6 +103,8 @@ private:
     std::vector<double> m_var_incs;
 
     planning_scene::PlanningSceneConstPtr m_scene;
+    bool m_use_partial_collisions;
+    std::vector<std::string> m_disabled_links;
 
     moveit::core::RobotStatePtr m_ref_state;
 

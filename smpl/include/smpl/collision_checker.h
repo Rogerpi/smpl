@@ -90,6 +90,14 @@ public:
         const RobotState& finish,
         std::vector<RobotState>& path) = 0;
 
+    /// \brief disable collision for a set of links
+    ///
+    /// This is intended for dual arm planning where the first one subgroup (e.g base + first arm)
+    /// finds a partial solution and then the rest follows this plan constrain
+    virtual bool setDisabledLinks(const std::vector<std::string>& links);
+
+    virtual bool useDisabledLinks(bool use_disabled_links);
+
     /// \name Visualization
     ///@{
     virtual auto getCollisionModelVisualization(const RobotState& state)
