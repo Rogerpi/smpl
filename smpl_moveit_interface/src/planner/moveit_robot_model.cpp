@@ -32,6 +32,7 @@
 /// \author Andrew Dornbush
 
 #include <smpl_moveit_interface/planner/moveit_robot_model.h>
+#include <eigen_conversions/eigen_msg.h>
 
 // standard includes
 #include <math.h>
@@ -633,17 +634,28 @@ bool MoveItRobotModel::computeIK(
     std::vector<smpl::RobotState>& solutions,
     smpl::ik_option::IkOption option)
 {
-    // TODO: the indigo version of moveit currently does not support returning
-    // multiple ik solutions, so instead we just return the only solution moveit
-    // offers; for later versions of moveit, this will need to be implemented
-    // properly
-    smpl::RobotState solution;
-    if (!computeIK(pose, start, solution, option)) {
+    if (!initialized()) {
+        ROS_ERROR("MoveIt! Robot Model is uninitialized");
         return false;
-    } else {
-        solutions.push_back(std::move(solution));
-        return true;
     }
+
+    if (!m_tip_link || !m_ik_group->canSetStateFromIK(m_tip_link->getName())) {
+        ROS_WARN_ONCE("computeIK not available for this Robot Model");
+        return false;
+    }
+
+    switch (option) {
+    case smpl::ik_option::UNRESTRICTED:
+        return computeUnrestrictedIK(pose, start, solutions);
+    case smpl::ik_option::RESTRICT_XYZ:
+        ROS_WARN_NAMED(LOG, "RESTRICTED XYZ NOT AVAILABLE YET");
+        return false;
+    case smpl::ik_option::RESTRICT_RPY:
+        ROS_WARN_NAMED(LOG, "RESTRICTED XYZ NOT AVAILABLE YET");
+        return false;
+    }
+
+    return false;
 }
 
 auto MoveItRobotModel::redundantVariableCount() const -> const int
@@ -889,6 +901,55 @@ bool MoveItRobotModel::computeWristIK(
 #else
     return false;
 #endif
+}
+
+bool MoveItRobotModel::computeUnrestrictedIK(
+    const Eigen::Isometry3d& pose,
+    const smpl::RobotState& start,
+    std::vector<smpl::RobotState>& solutions,
+    bool lock_redundant_joints)
+{
+    auto T_planning_link = pose;
+
+    // get the transform in the model frame
+    if (!transformToModelFrame(T_planning_link)) {
+        return false; // errors printed within
+    }
+    auto& T_model_link = T_planning_link; // rebrand
+
+    double timeout = 0.0;
+
+    //These paramaters are not supported yet by Girona500 kinematics plugin
+    int num_attempts = 1;
+    kinematics::KinematicsQueryOptions ops;
+    ops.lock_redundant_joints = lock_redundant_joints;
+    auto solver = m_ik_group->getSolverInstance();
+
+    std::vector<geometry_msgs::Pose> goal_pose;
+    goal_pose.resize(1);
+    tf::poseEigenToMsg(pose, goal_pose[0]);
+    kinematics::KinematicsResult result;
+
+    // Getting multiple solutions can only be achieved by default using the following kinematics_base
+    // solver method, which does not allow timeout or other constraints.
+    if (!solver->getPositionIK(goal_pose, start, solutions, result, ops))
+    {
+        Eigen::Quaterniond q(T_model_link.rotation());
+        ROS_DEBUG_NAMED(LOG, "Failed to set from ik to pose (%f, %f, %f, %f, %f, %f, %f)",
+                T_model_link.translation().x(),
+                T_model_link.translation().y(),
+                T_model_link.translation().z(),
+                q.x(),
+                q.y(),
+                q.z(),
+                q.w());
+
+        return false;
+    }
+
+
+    ROS_DEBUG_STREAM_NAMED(LOG, "IK Succeeded with " << solutions.size() <<" solutions ");
+    return true;
 }
 
 bool MoveItRobotModel::transformToPlanningFrame(Eigen::Isometry3d& T_model_link) const

@@ -388,7 +388,8 @@ bool ManipLatticeActionSpace::apply(
             act.clear();
             if(getAction(parent, goal_dist, start_dist, prim, act)){
                 actions.insert(actions.end(), act.begin(), act.end());
-                weights.push_back(prim.weight);
+                for(auto& _ : act)
+                    weights.push_back(prim.weight);
             }
         }
     }

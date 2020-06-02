@@ -196,6 +196,12 @@ private:
     bool computeUnrestrictedIK(
         const Eigen::Isometry3d& pose,
         const smpl::RobotState& start,
+        std::vector<smpl::RobotState>& solutions,
+        bool lock_redundant_joints = false);
+
+    bool computeUnrestrictedIK(
+        const Eigen::Isometry3d& pose,
+        const smpl::RobotState& start,
         smpl::RobotState& solution,
         bool lock_redundant_joints = false);
 
