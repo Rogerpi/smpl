@@ -251,4 +251,10 @@ void PlanningParams::convertToString(const Parameter& p, std::string& val) const
     val = boost::apply_visitor(string_converter(), p);
 }
 
+void PlanningParams::print() const{
+    for (auto& p : params){
+        SMPL_INFO_STREAM(p.first << " : " << p.second);
+    }
+}
+
 } // namespace smpl

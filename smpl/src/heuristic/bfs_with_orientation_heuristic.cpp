@@ -176,12 +176,12 @@ int BfsRPYHeuristic::GetGoalHeuristic(int state_id)
     Eigen::Vector3i dp;
     grid()->worldToGrid(p.x(), p.y(), p.z(), dp.x(), dp.y(), dp.z());
     int bfs_cost = getBfsCostToGoal(*m_bfs, dp.x(), dp.y(), dp.z());
-    Vector3 grot, crot;
-    grot = m_goal.pose.rotation().eulerAngles(0,1,2);
-    crot = pose.rotation().eulerAngles(0,1,2);
-    int ori_cost = fabs(crot[0] - grot[0]) + fabs(crot[1] - grot[1]) + fabs(crot[2] - grot[2]);
- 
-    return (int)(bfs_cost * grid()->resolution() * 10) + ori_cost * 20;
+    Eigen::Quaterniond gquat(m_goal.pose.rotation());
+    Eigen::Quaterniond cquat(pose.rotation());
+
+    Eigen::Quaterniond qdiff = cquat.conjugate() * gquat;
+    double angle = fabs(2 * atan2(qdiff.vec().norm(), qdiff.w()));
+    return (int)(bfs_cost * grid()->resolution() * 10 + angle * 100);
 }
 
 int BfsRPYHeuristic::GetStartHeuristic(int state_id)

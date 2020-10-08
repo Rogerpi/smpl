@@ -79,6 +79,7 @@ bool ManipLatticeActionSpace::init(ManipLattice* space)
     ampThresh(MotionPrimitive::SNAP_TO_RPY, 0.2);
     ampThresh(MotionPrimitive::SNAP_TO_XYZ_RPY, 0.2);
     ampThresh(MotionPrimitive::SHORT_DISTANCE, 0.2);
+    //ampThresh(MotionPrimitive::SUCCESSOR, 0.0);
 
     return true;
 }
@@ -99,6 +100,7 @@ bool ManipLatticeActionSpace::init(ManipLattice* space)
 /// dvi1         dvi2        ... dvim
 bool ManipLatticeActionSpace::load(const std::string& action_filename)
 {
+    SMPL_INFO_STREAM("Load mp " << action_filename);
     FILE* fCfg = fopen(action_filename.c_str(), "r");
     if (!fCfg) {
         SMPL_ERROR("Failed to open action set file. (file: '%s')", action_filename.c_str());
@@ -170,7 +172,7 @@ bool ManipLatticeActionSpace::load(const std::string& action_filename)
         int group;
         if(fscanf(fCfg, "%i", &group)<1)
         {
-            SMPL_ERROR("No planning group defiend for this MP!");
+            SMPL_ERROR("No planning group defined for this MP!");
             group = smpl::GroupType::ANY;
         }
         double weight;
@@ -179,6 +181,7 @@ bool ManipLatticeActionSpace::load(const std::string& action_filename)
             SMPL_ERROR("No weight defiend for this MP!");
             weight = 1.0;
         }
+        SMPL_INFO_STREAM("Read weight " << weight);
         
         if (i < (nrows - short_mprims)) {
             addMotionPrim(mprim, group, weight, false);
@@ -214,6 +217,7 @@ void ManipLatticeActionSpace::addMotionPrim(
     m.group = smpl::GroupType(group);
     m.weight = weight;
     m_mprims.push_back(m);
+    SMPL_INFO_STREAM("Argument weight: " << weight);
 
     if (add_converse) {
         for (RobotState& state : m.action) {
@@ -232,6 +236,40 @@ void ManipLatticeActionSpace::addMotionPrim(
 {
     addMotionPrim(mprim, GroupType::ANY, 1, short_dist_mprim, add_converse);
 }
+
+/*
+void ManipLatticeActionSpace::addSuccsMotionPrim(
+    const std::vector<int>& joint_idxs,
+    const RobotState& parent,
+    const RobotState& succ)
+{
+  auto it = m_msuccs.find(joint_idxs);
+  if(it == m_msuccs.end()){
+      std::map<RobotState, std::vector<MotionPrimitive>> succs_map;
+      std::vector<MotionPrimitive> prims;
+      prims.resize(1);
+      prims[0].type = prims[0].SUCCESSOR;
+      prims[0].group = smpl::GroupType::ANY;
+      prims[0].weight = 1; // TODO
+
+      std::vector<double> motion = succ;
+      for(unsigned int i = 0; i < succ.size(); i++){
+          motion[i] -= parent[i];
+      }
+
+      prims[0].action.push_back(motion);
+      succs_map.insert(std::make_pair(parent, prims));
+      m_msuccs.insert(std::make_pair(joint_idxs, succs_map));
+    
+  }
+  else{
+      //HEREEEEEEEEEEEEEEEEEEEEEE
+      //TODO: Check is not repeated
+      it->second.push_back(succ);
+  }
+}
+*/
+
 
 /// \brief Remove long and short motion primitives and disable adaptive motions.
 ///
@@ -260,6 +298,14 @@ void ManipLatticeActionSpace::clear()
      mprim.group = smpl::GroupType::ANY; 
     mprim.weight = 0.5;
     m_mprims.push_back(mprim);
+
+    /*
+    mprim.type = MotionPrimitive::SUCCESSOR;
+    mprim.action.clear();
+    mprim.group = smpl::GroupType::ANY;
+    mprim.weight = 1.0;
+    m_mprims.push_back(mprim);
+    */
 
     for (int i = 0; i < MotionPrimitive::NUMBER_OF_MPRIM_TYPES; ++i) {
         m_mprim_enabled[i] = (i == MotionPrimitive::Type::LONG_DISTANCE);
@@ -394,7 +440,7 @@ bool ManipLatticeActionSpace::apply(
         }
     }
     if (actions.empty()) {
-        SMPL_WARN("No motion primitives specified");
+        SMPL_WARN("No motion primitives specified (group)");
     }
     return true;
 }
@@ -406,13 +452,14 @@ bool ManipLatticeActionSpace::getAction(
     const MotionPrimitive& mp,
     std::vector<Action>& actions)
 {
+    SMPL_INFO_STREAM("goal dist " << goal_dist);
+    SMPL_INFO_STREAM("TYPE: " << mp.type << " ENABLED " << (m_mprim_enabled[mp.type] ? "true" : "false") << "THR: " <<  m_mprim_thresh[mp.type]);
     if (!mprimActive(start_dist, goal_dist, mp.type)) {
         return false;
     }
 
     GoalType goal_type = planningSpace()->goal().type;
     auto& goal_pose = planningSpace()->goal().pose;
-
     switch (mp.type) {
     case MotionPrimitive::LONG_DISTANCE:  // fall-through
     case MotionPrimitive::SHORT_DISTANCE:
@@ -426,6 +473,8 @@ bool ManipLatticeActionSpace::getAction(
     }
     case MotionPrimitive::SNAP_TO_RPY:
     {
+        SMPL_INFO("SNAP RPY ");
+        //std::getchar();
         return computeIkAction(
                 parent,
                 goal_pose,
@@ -435,6 +484,8 @@ bool ManipLatticeActionSpace::getAction(
     }
     case MotionPrimitive::SNAP_TO_XYZ:
     {
+        SMPL_INFO("SNAP XYZ ");
+        //std::getchar();
         return computeIkAction(
                 parent,
                 goal_pose,
@@ -444,13 +495,22 @@ bool ManipLatticeActionSpace::getAction(
     }
     case MotionPrimitive::SNAP_TO_XYZ_RPY:
     {
+        SMPL_INFO("SNAP XYZRPY ");
+        ///std::getchar();
         if (planningSpace()->goal().type != GoalType::JOINT_STATE_GOAL) {
-            return computeIkAction(
+            if(computeIkAction(
                     parent,
                     goal_pose,
                     goal_dist,
                     ik_option::UNRESTRICTED,
-                    actions);
+                    actions)){
+                        SMPL_INFO("IK WORK");
+                        return true;
+                    }
+                    else{
+                        SMPL_INFO("IK DOES NOT WORLK");
+                        return false;
+                    }
         }
 
         // goal is 7dof; instead of computing IK, use the goal itself as the IK
@@ -461,6 +521,41 @@ bool ManipLatticeActionSpace::getAction(
 
         return true;
     }
+    /*
+    case MotionPrimitive::SUCCESSOR: //For now hardcoded successor part
+    {
+        RobotState sub_parent = RobotState(8);
+        sub_parent[0] = parent[0];
+        sub_parent[1] = parent[1];
+        sub_parent[2] = parent[2];
+        sub_parent[3] = parent[3];
+        sub_parent[4] = parent[4];
+        sub_parent[5] = parent[5];
+        sub_parent[6] = parent[6];
+        sub_parent[7] = parent[7];
+        auto it = m_msuccs.find(sub_parent);
+        if (it == m_msuccs.end()){
+            SMPL_ERROR("Reached state out of successor primitives");
+            return false;
+        }
+        unsigned int succ_size = it->second.size();
+        for(unsigned int i = 0; i < succ_size; i++){
+            Action action = Action(1);
+            action[1] = parent;
+            action[1][0] = it->second[i][0];
+            action[1][1] = it->second[i][1];
+            action[1][2] = it->second[i][2];
+            action[1][3] = it->second[i][3];
+            action[1][4] = it->second[i][4];
+            action[1][5] = it->second[i][5];
+            action[1][6] = it->second[i][6];
+            action[1][7] = it->second[i][7];
+            actions.push_back(action);
+        }
+        SMPL_ERROR_STREAM("SUCCESSOR MP : " << succ_size);
+        return true;
+    }
+    */
     default:
         SMPL_ERROR("Motion Primitives of type '%d' are not supported.", mp.type);
         return false;
@@ -504,10 +599,12 @@ bool ManipLatticeActionSpace::computeIkAction(
     std::vector<Action>& actions)
 {
     if (!m_ik_iface) {
+        SMPL_ERROR("NO IK INTERFACE...");
         return false;
     }
 
     if (m_use_multiple_ik_solutions) {
+        SMPL_INFO("RP: MULTIPLE");
         //get actions for multiple ik solutions
         std::vector<RobotState> solutions;
         if (!m_ik_iface->computeIK(goal, state, solutions, option)) {
@@ -521,6 +618,7 @@ bool ManipLatticeActionSpace::computeIkAction(
         //get single action for single ik solution
         RobotState ik_sol;
         if (!m_ik_iface->computeIK(goal, state, ik_sol)) {
+            SMPL_ERROR("IK FAILED");
             return false;
         }
 
@@ -549,7 +647,7 @@ bool ManipLatticeActionSpace::mprimActive(
                 goal_dist <= m_mprim_thresh[MotionPrimitive::SHORT_DISTANCE];
         const bool near_start =
                 start_dist <= m_mprim_thresh[MotionPrimitive::SHORT_DISTANCE];
-        const bool near_endpoint = near_goal || near_start;
+        const bool near_endpoint = near_goal;// || near_start;
         return !(m_mprim_enabled[MotionPrimitive::SHORT_DISTANCE] && near_endpoint);
     } else if (type == MotionPrimitive::SHORT_DISTANCE) {
         if (m_use_long_and_short_dist_mprims) {
@@ -557,7 +655,7 @@ bool ManipLatticeActionSpace::mprimActive(
         }
         const bool near_goal = goal_dist <= m_mprim_thresh[type];
         const bool near_start = start_dist <= m_mprim_thresh[type];
-        const bool near_endpoint = near_goal || near_start;
+        const bool near_endpoint = near_goal;// || near_start;
         return m_mprim_enabled[type] && near_endpoint;
     } else {
         return m_mprim_enabled[type] && goal_dist <= m_mprim_thresh[type];

@@ -76,6 +76,13 @@ public:
         bool short_dist_mprim,
         bool add_converse = true);
 
+    /*
+    void addSuccsMotionPrim(
+        const std::vector<int>& joint_idxs,
+        const RobotState& parent,
+        const RobotState& succ);
+    */
+
     void clear();
 
     const_iterator begin() const { return m_mprims.begin(); }
@@ -103,6 +110,8 @@ public:
 protected:
 
     std::vector<MotionPrimitive> m_mprims;
+    //This looks very inefficient. TODO:
+    //std::map<std::vector<int>, std::map<RobotState, std::vector<MotionPrimitive>>> m_msuccs; 
 
     ForwardKinematicsInterface* m_fk_iface = nullptr;
     InverseKinematicsInterface* m_ik_iface = nullptr;

@@ -73,6 +73,14 @@ public:
         const std::vector<int>& ids,
         std::vector<RobotState>& path) = 0;
 
+    virtual  bool extractPathDual(const std::vector<int>& ids, 
+        std::vector<RobotState>& path_without_goal, 
+        std::vector<RobotState>&goals)
+    {
+        SMPL_WARN("RP: WORKAROUND FOR DUAL");
+        return false;
+    }
+
     virtual bool insertHeuristic(RobotHeuristic* h);
     virtual bool eraseHeuristic(const RobotHeuristic* h);
     virtual bool hasHeuristic(const RobotHeuristic* h);

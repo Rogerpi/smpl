@@ -122,6 +122,8 @@ public:
 
     bool hasParam(const std::string& name) const;
 
+    void print() const;
+
 private:
 
     std::unordered_map<std::string, Parameter> params;

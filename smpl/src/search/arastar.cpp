@@ -40,6 +40,10 @@
 #include <smpl/time.h>
 #include <smpl/console/console.h>
 
+//Temp
+#include <smpl/debug/visualize.h>
+#include <smpl/graph/manip_lattice.h>
+
 namespace smpl {
 
 static const char* SLOG = "search";
@@ -160,6 +164,18 @@ int ARAStar::replan(
 
         m_last_goal_state_id = m_goal_state_id;
     }
+    
+    SMPL_DEBUG_STREAM_NAMED(SLOG, "Starting EPS : " << m_curr_eps);
+    SMPL_DEBUG_STREAM_NAMED(SLOG, "Final EPS : " << m_final_eps);
+    SMPL_DEBUG_STREAM_NAMED(SLOG, "Satisfied EPS : " << m_satisfied_eps);
+    SMPL_DEBUG_STREAM_NAMED(SLOG, "Improve : " << m_time_params.improve?"true":"false");
+    if(m_time_params.type == m_time_params.EXPANSIONS){
+        SMPL_DEBUG_STREAM_NAMED(SLOG, "MAX expansions " << m_time_params.max_expansions_init << " " << m_time_params.max_expansions);
+    }
+    else{
+        SMPL_DEBUG_STREAM_NAMED(SLOG, "MAX time " << to_seconds(m_time_params.max_allowed_time_init) << " " << to_seconds(m_time_params.max_allowed_time));
+    }
+
 
     auto start_time = clock::now();
     int num_expansions = 0;
@@ -245,7 +261,9 @@ int ARAStar::replan(
     int* cost)
 {
     TimeParameters tparams = m_time_params;
+    SMPL_DEBUG_STREAM("Allowed time: " << smpl::to_seconds(tparams.max_allowed_time) << " init " << smpl::to_seconds(tparams.max_allowed_time_init) );
     if (tparams.max_allowed_time_init == tparams.max_allowed_time) {
+        SMPL_DEBUG("Same max_allowed_time");
         // NOTE/TODO: this may lead to awkward behavior, if the caller sets the
         // allowed time to the current repair time, the repair time will begin
         // to track the allowed time for further calls to replan. perhaps set
@@ -368,6 +386,7 @@ int ARAStar::set_goal(int goal_state_id)
 /// Set the start state.
 int ARAStar::set_start(int start_state_id)
 {
+    SMPL_INFO_STREAM("RP: set start ara");
     m_start_state_id = start_state_id;
     return 1;
 }
@@ -504,6 +523,7 @@ int ARAStar::improvePath(
         }
 
         SMPL_DEBUG_NAMED(SELOG, "Expand state %d", min_state->state_id);
+        SMPL_INFO_STREAM("F: " << min_state->f << " G: " << min_state->g << " H: " << min_state->h << " WH: " << min_state->f - min_state->g);
 
         m_open.pop();
 
@@ -513,7 +533,23 @@ int ARAStar::improvePath(
         min_state->iteration_closed = m_iteration;
         min_state->eg = min_state->g;
 
+        auto *vis_name = "min_state";
+        smpl::ManipLattice *aux = dynamic_cast<smpl::ManipLattice*>(m_space);
+        auto rs  = aux->extractState(min_state->state_id);
+        auto min_state_markers = aux->getStateVisualization(rs, vis_name, visual::Color(1,0,0,0.8));
+        SV_SHOW_INFO(min_state_markers);
+        SMPL_DEBUG_NAMED(SLOG, "POP MIN STATE. SHOW IN RED");
+        waitDebug();
+        // delete min state viz
+        for(auto & m: min_state_markers){
+            m.action = m.ACTION_DELETE;
+        }
+        SV_SHOW_INFO(min_state_markers);
+
+        SMPL_DEBUG_NAMED(SLOG, "START EXPAND");
         expand(min_state);
+        SMPL_DEBUG_NAMED(SLOG, "END EXPAND");
+        waitDebug();
 
         ++elapsed_expansions;
     }
@@ -527,19 +563,24 @@ void ARAStar::expand(SearchState* s)
 {
     m_succs.clear();
     m_costs.clear();
+    SMPL_DEBUG_NAMED(SLOG, "--- Start Get Succs");
     m_space->GetSuccs(s->state_id, &m_succs, &m_costs);
+    SMPL_DEBUG_NAMED(SLOG, "--- End Get Succs");
 
-    SMPL_DEBUG_NAMED(SELOG, "  %zu successors", m_succs.size());
+    SMPL_DEBUG_NAMED(SELOG, "---  %zu successors", m_succs.size());
 
+    std::vector<smpl::visual::Marker> markers;
     for (size_t sidx = 0; sidx < m_succs.size(); ++sidx) {
         int succ_state_id = m_succs[sidx];
         int cost = m_costs[sidx];
+
+        SMPL_DEBUG_NAMED(SELOG, "--- Got successor: %d with cost %d", succ_state_id, cost);
 
         SearchState* succ_state = getSearchState(succ_state_id);
         reinitSearchState(succ_state);
 
         int new_cost = s->eg + cost;
-        SMPL_DEBUG_NAMED(SELOG, "Compare new cost %d vs old cost %d", new_cost, succ_state->g);
+        SMPL_DEBUG_NAMED(SELOG, "--- Compare new cost %d vs old cost %d", new_cost, succ_state->g);
         if (new_cost < succ_state->g) {
             succ_state->g = new_cost;
             succ_state->bp = s;
@@ -554,7 +595,21 @@ void ARAStar::expand(SearchState* s)
                 m_incons.push_back(succ_state);
             }
         }
+        
+        SMPL_INFO_STREAM(" --- F: " << succ_state->f << " G: " << succ_state->g << " H: " << succ_state->h << " WH: " << succ_state->f - succ_state->g);
+        auto *vis_name = "successor";
+        smpl::ManipLattice *aux = dynamic_cast<smpl::ManipLattice*>(m_space);
+        auto rs  = aux->extractState(succ_state_id);
+        markers = aux->getStateVisualization(rs, vis_name);
+        SV_SHOW_INFO(markers);
+        waitDebug();
     }
+    // delete expanded viz
+    for(auto & m: markers){
+        m.action = m.ACTION_DELETE;
+    }
+    SV_SHOW_INFO(markers);
+
 }
 
 // Recompute the f-values of all states in OPEN and reorder OPEN.

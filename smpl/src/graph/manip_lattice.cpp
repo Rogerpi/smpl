@@ -141,6 +141,49 @@ bool ManipLattice::init(
     return true;
 }
 
+
+bool ManipLattice::initPartialPathMP(const std::vector<RobotState>& path, const std::vector<RobotState>& goals){
+    
+    m_partial_previous_path.clear();
+
+    for(auto & p : path){
+        RobotState rs(14, 0); //TODO dual: hardcoded
+        rs[0] = p[0];
+        rs[1] = p[1];
+        rs[2] = p[2];
+        rs[3] = p[3];
+        rs[10] = p[4];
+        rs[11] = p[5];
+        rs[12] = p[6];
+        rs[13] = p[7];
+  
+        m_partial_previous_path.push_back({rs});
+    }
+
+    std::vector<RobotState> last;
+    for(auto & p : goals){
+        RobotState rs(14, 0); //TODO dual: hardcoded
+        rs[0] = p[0];
+        rs[1] = p[1];
+        rs[2] = p[2];
+        rs[3] = p[3];
+        rs[10] = p[4];
+        rs[11] = p[5];
+        rs[12] = p[6];
+        rs[13] = p[7];
+        last.push_back(rs);
+    }
+
+    m_partial_previous_path.push_back(std::move(last));
+
+    //Add an empty one as goals don't have successor
+    m_partial_previous_path.push_back(std::vector<RobotState>());
+    
+    m_states_to_partial_path.resize(2,0); // [0] is abstract goal state
+    m_use_succs_mp = true;
+    return true;
+}
+
 void ManipLattice::PrintState(int stateID, bool verbose, FILE* fout)
 {
     assert(stateID >= 0 && stateID < (int)m_states.size());
@@ -219,8 +262,8 @@ void ManipLattice::GetSuccs(
     SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "  coord: " << parent_entry->coord);
     SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "  angles: " << parent_entry->state);
 
-    auto* vis_name = "expansion";
-    SV_SHOW_DEBUG_NAMED(vis_name, getStateVisualization(parent_entry->state, vis_name));
+    //auto* vis_name = "expansion";
+    //SV_SHOW_DEBUG_NAMED(vis_name, getStateVisualization(parent_entry->state, vis_name));
 
     int goal_succ_count = 0;
 
@@ -230,6 +273,42 @@ void ManipLattice::GetSuccs(
         SMPL_WARN("Failed to get actions");
         return;
     }
+
+    // Apply successor mp. TODO dual: This shouldn't be here
+    std::vector<bool> is_partial_path_succ_action;
+    is_partial_path_succ_action.resize(actions.size(), false);
+    if (m_use_succs_mp){
+        if(state_id > m_states_to_partial_path.size()){
+            SMPL_ERROR_STREAM("Trying to access state id "<< state_id <<"on succs mp but size is " << m_states_to_partial_path.size() );
+        }
+        else{
+            int partial_path_idx = m_states_to_partial_path[state_id];
+            if(partial_path_idx + 1 > m_partial_previous_path.size()){
+                SMPL_ERROR_STREAM("Trying to access path id "<< partial_path_idx <<"on previous path but size is " << m_partial_previous_path.size() );
+            }
+            else{
+                auto & next_states = m_partial_previous_path[partial_path_idx + 1];
+                auto sz = next_states.size();
+                if(sz == 0){
+                    SMPL_INFO("REACHED LAST!!!!!!!!!! SUCC MP");
+                    ///std::getchar();
+                    ///std::getchar();
+                }
+                for(unsigned int idx = 0; idx < sz; idx++){
+                    Action new_act;
+                    new_act.resize(1);
+                    new_act[0].resize(parent_entry->state.size());
+                    for(unsigned int i = 0; i < new_act[0].size(); i++){
+                        new_act[0][i] = parent_entry->state[i] + next_states[idx][i] - m_partial_previous_path[partial_path_idx][0][i];
+                    }
+                    actions.push_back(new_act);
+                    weights.push_back(0); //TODO
+                    is_partial_path_succ_action.push_back(true);
+                }
+            }
+        }
+    }
+    // mp succs done
 
     SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "  actions: %zu", actions.size());
 
@@ -263,11 +342,28 @@ void ManipLattice::GetSuccs(
 
         // put successor on successor list with the proper cost
         if (is_goal_succ) {
+            m_goal_succs.push_back(succ_state_id);
             succs->push_back(m_goal_state_id);
         } else {
             succs->push_back(succ_state_id);
         }
         costs->push_back(cost(parent_entry, succ_entry, weights[i], is_goal_succ));
+
+        // Update partial_path_succ
+        //SMPL_INFO_STREAM("SUCCESSOR ID: " << succ_state_id << " SIZE: " << m_states_to_partial_path.size());
+        //std::getchar();
+        if(succ_state_id == m_states_to_partial_path.size()){
+            if(is_partial_path_succ_action[i]){
+                m_states_to_partial_path.push_back(m_states_to_partial_path[state_id] + 1);
+            }
+            else{
+                m_states_to_partial_path.push_back(m_states_to_partial_path[state_id]);
+            }
+        }
+        else{
+            //SMPL_WARN_STREAM("repeated succ state id on partial path. this shouldn't change the mapping");
+        }
+        
 
         // log successor details
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "      succ: %zu", i);
@@ -279,6 +375,7 @@ void ManipLattice::GetSuccs(
 
     if (goal_succ_count > 0) {
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "Got %d goal successors!", goal_succ_count);
+        SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "Saved %d goal successors!", m_goal_succs.size());
     }
 }
 
@@ -308,8 +405,8 @@ void ManipLattice::GetSuccsByGroup(
     SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "  coord: " << parent_entry->coord);
     SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "  angles: " << parent_entry->state);
 
-    auto* vis_name = "expansion";
-    SV_SHOW_DEBUG_NAMED(vis_name, getStateVisualizationByGroup(parent_entry->state, vis_name, group));
+    //auto* vis_name = "expansion";
+    //SV_SHOW_INFO_NAMED(vis_name, getStateVisualizationByGroup(parent_entry->state, vis_name, group));
 
     int goal_succ_count = 0;
 
@@ -320,6 +417,37 @@ void ManipLattice::GetSuccsByGroup(
         return;
     }
 
+    // Apply successor mp. TODO: This shouldn't be here
+    std::vector<bool> is_partial_path_succ_action;
+    is_partial_path_succ_action.resize(actions.size(), false);
+    if (m_use_succs_mp){
+        if(state_id > m_states_to_partial_path.size()){
+            SMPL_ERROR_STREAM("Trying to access state id "<< state_id <<"on succs mp but size is " << m_states_to_partial_path.size() );
+        }
+        else{
+            int partial_path_idx = m_states_to_partial_path[state_id];
+            if(partial_path_idx + 1 > m_partial_previous_path.size()){
+                SMPL_ERROR_STREAM("Trying to access path id "<< partial_path_idx <<"on previous path but size is " << m_partial_previous_path.size() );
+            }
+            else{
+                auto & next_states = m_partial_previous_path[partial_path_idx + 1];
+                auto sz = next_states.size();
+                for(unsigned int idx = 0; idx < sz; idx++){
+                    Action new_act;
+                    new_act.resize(1);
+                    new_act[0].resize(parent_entry->state.size());
+                    for(unsigned int i = 0; i < new_act[0].size(); i++){
+                        new_act[0][i] = parent_entry->state[i] + next_states[idx][i] - m_partial_previous_path[partial_path_idx][0][i];
+                    }
+                    actions.push_back(new_act);
+                    weights.push_back(0); //TODO
+                    is_partial_path_succ_action.push_back(true);
+                }
+            }
+        }
+    }
+    // mp succs done
+
     SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "  actions: %zu", actions.size());
 
     // check actions for validity
@@ -329,8 +457,20 @@ void ManipLattice::GetSuccsByGroup(
 
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "    action %zu:", i);
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "      waypoints: %zu", action.size());
+        //sSMPL_INFO_STREAM("weight " << weights[i]);
+        if(weights[i] < 1){
+            //SV_SHOW_INFO_NAMED("snap", getStateVisualizationByGroup(action.back(), "snap", group));
+            //if (!checkAction(parent_entry->state, action)) {
+            //    SMPL_INFO_STREAM("failed checkaction");
+             //}
+            //std::getchar();
 
+        }
         if (!checkAction(parent_entry->state, action)) {
+            SMPL_INFO("failed");
+            auto * vis_name = "failed";
+            SV_SHOW_INFO_NAMED(vis_name, getStateVisualizationByGroup(action.back(), vis_name, group));
+            //std::getchar();
             continue;
         }
 
@@ -359,12 +499,30 @@ void ManipLattice::GetSuccsByGroup(
         }
         costs->push_back(cost(parent_entry, succ_entry, weights[i], is_goal_succ));
 
+
+        // Update partial_path_succ
+        if(succ_state_id == m_states_to_partial_path.size()){
+            if(is_partial_path_succ_action[i]){
+                m_states_to_partial_path.push_back(m_states_to_partial_path[state_id] + 1);
+            }
+            else{
+                m_states_to_partial_path.push_back(m_states_to_partial_path[state_id]);
+            }
+        }
+        else{
+            SMPL_WARN_STREAM("repeated succ state id on partial path. this shouldn't change the mapping");
+        }
+
         // log successor details
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "      succ: %zu", i);
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "        id: %5i", succ_state_id);
         SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "        coord: " << succ_coord);
         SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "        state: " << succ_entry->state);
         SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "        cost: %5d", cost(parent_entry, succ_entry, is_goal_succ));
+        //std::string vis_name = "successor" + std::to_string(succ_state_id);
+        SMPL_INFO("yes");
+        //SV_SHOW_INFO_NAMED(vis_name, getStateVisualizationByGroup(succ_entry->state, vis_name, group));
+        //std::getchar();
     }
 
     if (goal_succ_count > 0) {
@@ -542,6 +700,8 @@ bool ManipLattice::projectToPose(int state_id, Affine3& pose)
         return true;
     }
 
+    SMPL_INFO_STREAM("STATE ID" << state_id); // Check why dual crash
+    SMPL_INFO_STREAM("M states size " << m_states.size());
     pose = computePlanningFrameFK(m_states[state_id]->state);
     return true;
 }
@@ -684,6 +844,8 @@ auto ManipLattice::computePlanningFrameFK(const RobotState& state) const
     assert(state.size() == robot()->jointVariableCount());
     assert(m_fk_iface);
 
+    SMPL_INFO_STREAM("before compute fk");
+
     return m_fk_iface->computeFK(state);
 }
 
@@ -692,8 +854,24 @@ int ManipLattice::cost(
     ManipLatticeState* HashEntry2,
     bool bState2IsGoal) const
 {
+    if(bState2IsGoal){  // Not sure if cost should be lower or higher than default cost
+        int cost = 0;
+        for(unsigned int i = 0; i < HashEntry1->state.size(); i++){
+            int dist = abs(HashEntry1->coord[i]  - HashEntry2->coord[i]);
+            cost += dist;
+        }
+        return cost;
+    }
     auto DefaultCostMultiplier = 1000;
     return DefaultCostMultiplier;
+    /*
+    if (bState2IsGoal)
+        return 0;
+    auto fk1 = m_fk_iface->computeFK(HashEntry1->state);
+    auto fk2 = m_fk_iface->computeFK(HashEntry2->state);
+
+    return int((fk2.translation() - fk1.translation()).norm() * 1000);
+    */
 }
 
 int ManipLattice::cost(
@@ -702,12 +880,14 @@ int ManipLattice::cost(
     double actionWeight,
     bool bState2IsGoal) const
 {
-    auto DefaultCostMultiplier = 1000;
-    return DefaultCostMultiplier*actionWeight;
+    return int(cost(HashEntry1,HashEntry2,bState2IsGoal) * actionWeight);
 }
 
 bool ManipLattice::checkAction(const RobotState& state, const Action& action)
 {
+
+    SMPL_INFO_STREAM("check action: state size " << state.size() << " robot variable size " << robot()->jointVariableCount());
+
     std::uint32_t violation_mask = 0x00000000;
 
     // check intermediate states for collisions
@@ -716,6 +896,7 @@ bool ManipLattice::checkAction(const RobotState& state, const Action& action)
         SMPL_DEBUG_STREAM_NAMED(G_EXPANSIONS_LOG, "        " << iidx << ": " << istate);
 
         // check joint limits
+        
         if (!robot()->checkJointLimits(istate)) {
             SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "        -> violates joint limits");
             violation_mask |= 0x00000001;
@@ -875,11 +1056,14 @@ bool ManipLattice::isGoal(const RobotState& state)
 
 auto ManipLattice::getStateVisualization(
     const RobotState& state,
-    const std::string& ns)
+    const std::string& ns, const visual::Color& color)
     -> std::vector<visual::Marker>
 {
+    SMPL_INFO_STREAM("get vis state size " << state.size() << " robot variable size " << robot()->jointVariableCount());
+
     auto markers = collisionChecker()->getCollisionModelVisualization(state);
     for (auto& marker : markers) {
+        marker.color = color;
         marker.ns = ns;
     }
     return markers;
@@ -888,17 +1072,21 @@ auto ManipLattice::getStateVisualization(
 auto ManipLattice::getStateVisualizationByGroup(const RobotState& state, const std::string& ns, int group)
         -> std::vector<visual::Marker>
 {
+    SMPL_INFO_STREAM("getvizgroup state size " << state.size() << " robot variable size " << robot()->jointVariableCount());
+
     auto markers = collisionChecker()->getCollisionModelVisualization(state);
     for (auto& marker : markers) {
         switch (group)
         {
         case GroupType::BASE:
         case GroupType::BASE_ISO:
-            marker.color = visual::Color(0,0,1,1);
+            marker.color = visual::Color(0,0,1,0.8);
+            break;
+        case GroupType::ARM:
+            marker.color = visual::Color(1,0,0,0.8);
             break;
         default:
-            marker.color = visual::Color(1,0,0,1);
-            break;
+            marker.color = visual::Color(0, 1, 0, 0.8);
        }
        marker.ns = ns;    
     }
@@ -908,42 +1096,52 @@ auto ManipLattice::getStateVisualizationByGroup(const RobotState& state, const s
 bool ManipLattice::setStart(const RobotState& state)
 {
     SMPL_DEBUG_NAMED(G_LOG, "set the start state");
-
+    SMPL_INFO_STREAM("state size " << state.size() << " robot variable size " << robot()->jointVariableCount());
     if ((int)state.size() < robot()->jointVariableCount()) {
         SMPL_ERROR_NAMED(G_LOG, "start state does not contain enough joint positions");
         return false;
     }
+    //TODO dual: workaround to pass through. This should be done on higher level??
+    RobotState state2(robot()->jointVariableCount());
+    for (unsigned int i = 0; i < state2.size(); i++){
+        state2[i] = state[i];
+    }
 
-    SMPL_DEBUG_STREAM_NAMED(G_LOG, "  state: " << state);
+    SMPL_DEBUG_STREAM_NAMED(G_LOG, "  state: " << state2);
 
     // check joint limits of starting configuration
-    if (!robot()->checkJointLimits(state, true)) {
+    if (!robot()->checkJointLimits(state2, true)) {
         SMPL_WARN(" -> violates the joint limits");
         return false;
     }
 
+    std::cout << "RP : here 1 "<< std::endl;
+
     // check if the start configuration is in collision
-    if (!collisionChecker()->isStateValid(state, true)) {
+    if (!collisionChecker()->isStateValid(state2, true)) {
         auto* vis_name = "invalid_start";
-        SV_SHOW_WARN_NAMED(vis_name, collisionChecker()->getCollisionModelVisualization(state));
+        std::cout << "RP: here 3" << std::endl;
+        SV_SHOW_WARN_NAMED(vis_name, collisionChecker()->getCollisionModelVisualization(state2));
         SMPL_WARN(" -> in collision");
         return false;
     }
 
+    std:: cout << "RP: here 2 " << std::endl;
+
     auto* vis_name = "start_config";
-    SV_SHOW_INFO_NAMED(vis_name, getStateVisualization(state, vis_name));
+    SV_SHOW_INFO_NAMED(vis_name, getStateVisualization(state2, vis_name));
 
     // get arm position in environment
     auto start_coord = RobotCoord(robot()->jointVariableCount());
-    stateToCoord(state, start_coord);
+    stateToCoord(state2, start_coord);
     SMPL_DEBUG_STREAM_NAMED(G_LOG, "  coord: " << start_coord);
 
-    m_start_state_id = getOrCreateState(start_coord, state);
+    m_start_state_id = getOrCreateState(start_coord, state2);
 
-    m_actions->updateStart(state);
+    m_actions->updateStart(state2);
 
     // notify observers of updated start state
-    return RobotPlanningSpace::setStart(state);
+    return RobotPlanningSpace::setStart(state2);
 }
 
 bool ManipLattice::setGoal(const GoalConstraint& goal)
@@ -1089,20 +1287,41 @@ bool ManipLattice::extractPath(
 
                 // skip non-goal states
                 if (!isGoal(action.back())) {
+                    /*
+                    SMPL_ERROR_STREAM("no goal " << action.back());
+                    SV_SHOW_INFO_NAMED("bad", getStateVisualization( action.back(), "no goal"));
+                    std::getchar();
+                    */
                     continue;
                 }
 
                 // check the validity of this transition
                 if (!checkAction(prev_state, action)) {
+                    /*
+                    SMPL_ERROR_STREAM("Bad " << action.back());
+                    SV_SHOW_INFO_NAMED("bad", getStateVisualization( action.back(), "bad"));
+                    std::getchar();
+                    */
                     continue;
                 }
 
+                
+
                 stateToCoord(action.back(), succ_coord);
                 int succ_state_id = getHashEntry(succ_coord);
+
+                auto* vis_name = "goal_configs";
+                
+    
+                //SV_SHOW_INFO_NAMED(vis_name, getStateVisualization( action.back(), vis_name));
+                //std::getchar();
+
+                //int succ_state_id = getOrCreateState(succ_coord, action.back());
                 ManipLatticeState* succ_entry = getHashEntry(succ_state_id);
                 assert(succ_entry);
-
                 auto edge_cost = cost(prev_entry, succ_entry, true);
+                SMPL_ERROR_STREAM("GOAL ACTION: " << succ_state_id << " with cost " << edge_cost);
+                SMPL_ERROR_STREAM("GOAL STATE" << succ_entry->state);
                 if (edge_cost < best_cost) {
                     best_cost = edge_cost;
                     best_goal_state = succ_entry;
@@ -1133,6 +1352,104 @@ bool ManipLattice::extractPath(
     SV_SHOW_INFO_NAMED(vis_name, getStateVisualization(path.back(), vis_name));
     return true;
 }
+
+bool ManipLattice::extractPathDual(
+    const std::vector<int>& idpath,
+    std::vector<RobotState>& path,
+    std::vector<RobotState>& goals)
+{
+    if (idpath.empty()) {
+        return true;
+    }
+
+    std::vector<RobotState> opath;
+    std::vector<RobotState> ogoals;
+
+    // attempt to handle paths of length 1...do any of the sbpl planners still
+    // return a single-point path in some cases?
+    if (idpath.size() == 1) {
+        auto state_id = idpath[0];
+
+        if (state_id == getGoalStateID()) {
+            auto* entry = getHashEntry(getStartStateID());
+            if (!entry) {
+                SMPL_ERROR_NAMED(G_LOG, "Failed to get state entry for state %d", getStartStateID());
+                return false;
+            }
+            opath.push_back(entry->state);
+        } else {
+            auto* entry = getHashEntry(state_id);
+            if (!entry) {
+                SMPL_ERROR_NAMED(G_LOG, "Failed to get state entry for state %d", state_id);
+                return false;
+            }
+            opath.push_back(entry->state);
+        }
+
+        auto* vis_name = "goal_config";
+        SV_SHOW_INFO_NAMED(vis_name, getStateVisualization(opath.back(), vis_name));
+        return true;
+    }
+
+    if (idpath[0] == getGoalStateID()) {
+        SMPL_ERROR_NAMED(G_LOG, "Cannot extract a non-trivial path starting from the goal state");
+        return false;
+    }
+
+    // grab the first point
+    {
+        auto* entry = getHashEntry(idpath[0]);
+        if (!entry) {
+            SMPL_ERROR_NAMED(G_LOG, "Failed to get state entry for state %d", idpath[0]);
+            return false;
+        }
+        opath.push_back(entry->state);
+    }
+
+    // grab the rest of the points
+    for (size_t i = 1; i < idpath.size(); ++i) {
+        auto prev_id = idpath[i - 1];
+        auto curr_id = idpath[i];
+        SMPL_DEBUG_NAMED(G_LOG, "Extract motion from state %d to state %d", prev_id, curr_id);
+
+        if (prev_id == getGoalStateID()) {
+            SMPL_ERROR_NAMED(G_LOG, "Cannot determine goal state predecessor state during path extraction");
+            return false;
+        }
+
+        if (curr_id == getGoalStateID()){
+            for (auto & g : m_goal_succs){
+                auto* entry = getHashEntry(g);
+                if (!entry) {
+                    SMPL_ERROR_NAMED(G_LOG, "Failed to get goal state entry state %d", curr_id);
+                    return false;
+                }
+                SMPL_DEBUG_STREAM_NAMED(G_LOG, "Extract goal state " << entry->state);
+                ogoals.push_back(entry->state);
+            }
+        }
+        else {
+            auto* entry = getHashEntry(curr_id);
+            if (!entry) {
+                SMPL_ERROR_NAMED(G_LOG, "Failed to get state entry state %d", curr_id);
+                return false;
+            }
+
+            SMPL_DEBUG_STREAM_NAMED(G_LOG, "Extract successor state " << entry->state);
+            opath.push_back(entry->state);
+        }
+    }
+
+    // we made it!
+    path = std::move(opath);
+    goals = std::move(ogoals);
+    auto* vis_name = "goal_config";
+    auto* vis_name2 = "goal_config2";
+    SV_SHOW_INFO_NAMED(vis_name, getStateVisualization(path.back(), vis_name));
+    SV_SHOW_INFO_NAMED(vis_name2, getStateVisualization(goals.back(), vis_name2));
+    return true;
+}
+
 
 Extension* ManipLattice::getExtension(size_t class_code)
 {
@@ -1184,7 +1501,8 @@ RobotState ManipLattice::getStartConfiguration() const
 /// Set a 6-dof goal pose for the planning link
 bool ManipLattice::setGoalPose(const GoalConstraint& gc)
 {
-    auto* vis_name = "goal_pose";
+  
+    std::string vis_name = (gc.name.empty() ?  "goal_pose" : gc.name);
     SV_SHOW_INFO_NAMED(vis_name, visual::MakePoseMarkers(gc.pose, m_viz_frame_id, vis_name));
 
     using namespace std::chrono;

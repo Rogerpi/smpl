@@ -60,6 +60,8 @@ bool BfsHeuristic::init(RobotPlanningSpace* space, const OccupancyGrid* grid)
 
     m_grid = grid;
 
+    SMPL_INFO_STREAM("resolution " << m_grid->resolution());
+
     m_pp = space->getExtension<PointProjectionExtension>();
     if (m_pp != NULL) {
         SMPL_INFO_NAMED(LOG, "Got Point Projection Extension!");
@@ -193,16 +195,19 @@ int BfsHeuristic::GetGoalHeuristic(int state_id)
     if (m_pp == NULL) {
         return 0;
     }
+    SMPL_INFO_STREAM("its here");
 
     Vector3 p;
     if (!m_pp->projectToPoint(state_id, p)) {
         return 0;
     }
+    SMPL_INFO_STREAM("afte project to point");
 
     Eigen::Vector3i dp;
     grid()->worldToGrid(p.x(), p.y(), p.z(), dp.x(), dp.y(), dp.z());
+    SMPL_INFO_STREAM("After world to grid");
 
-    return getBfsCostToGoal(*m_bfs, dp.x(), dp.y(), dp.z());
+    return (int) (getBfsCostToGoal(*m_bfs, dp.x(), dp.y(), dp.z()) * m_grid->resolution() * 10);
 }
 
 int BfsHeuristic::GetStartHeuristic(int state_id)
@@ -222,8 +227,9 @@ int BfsHeuristic::GetFromToHeuristic(int from_id, int to_id)
     }
 }
 
-auto BfsHeuristic::getWallsVisualization() const -> visual::Marker
+auto BfsHeuristic::getWallsVisualization(const std::string& label) const -> visual::Marker
 {
+    SMPL_INFO_STREAM("HERE");
     std::vector<Vector3> centers;
     int dimX = grid()->numCellsX();
     int dimY = grid()->numCellsY();
@@ -253,17 +259,22 @@ auto BfsHeuristic::getWallsVisualization() const -> visual::Marker
             grid()->resolution(),
             color,
             grid()->getReferenceFrame(),
-            "bfs_walls");
+            label);
 }
 
-auto BfsHeuristic::getValuesVisualization() -> visual::Marker
+auto BfsHeuristic::getValuesVisualization(const std::string & label) -> visual::Marker
 {
+    SMPL_INFO_STREAM("HERE1 " << m_goal_cells.size());
     bool all_invalid = true;
     for (auto& cell : m_goal_cells) {
+        SMPL_INFO("Before iswall");
         if (!m_bfs->isWall(cell.x, cell.y, cell.z)) {
+            SMPL_INFO("After iswall");
             all_invalid = false;
             break;
         }
+        SMPL_INFO("After iswall");
+
     }
 
     // no goal cells or all invalid => all invalid
@@ -274,7 +285,9 @@ auto BfsHeuristic::getValuesVisualization() -> visual::Marker
     // hopefully this doesn't screw anything up too badly...this will flush the
     // bfs to a little past the start, but this would be done by the search
     // hereafter anyway
+    SMPL_INFO("hi");
     int start_heur = GetGoalHeuristic(planningSpace()->getStartStateID());
+    SMPL_INFO("HII");
     if (start_heur == Infinity) {
         return visual::MakeEmptyMarker();
     }
@@ -381,7 +394,7 @@ auto BfsHeuristic::getValuesVisualization() -> visual::Marker
             0.5 * grid()->resolution(),
             std::move(colors),
             grid()->getReferenceFrame(),
-            "bfs_values");
+            label);
 }
 
 void BfsHeuristic::syncGridAndBfs()

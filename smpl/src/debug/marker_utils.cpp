@@ -93,21 +93,40 @@ auto MakePoseMarkers(
     bool text)
     -> std::vector<Marker>
 {
-    std::vector<Marker> markers(2);
+    std::vector<Marker> markers(4);
+
+    Affine3 p(pose);
 
     markers[0].pose = pose;
     markers[0].shape = Arrow{ 0.1, 0.015 };
-    markers[0].color = Color{ 0.0f, 0.7f, 0.6f, 0.7f };
+    markers[0].color = Color{ 1.0f, 0.0f, 0.0f, 0.7f };
     markers[0].frame_id = frame_id;
     markers[0].ns = ns;
     markers[0].id = id;
 
-    markers[1].pose = pose;
-    markers[1].shape = Ellipse{ 0.07, 0.07, 0.1 };
-    markers[1].color = Color{ };
+    p.rotate(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()));
+    markers[1].pose = p;
+    markers[1].shape = Arrow{ 0.1, 0.015 };
+    markers[1].color = Color{ 0.0f, 1.0f, 0.0f, 0.7f };
     markers[1].frame_id = frame_id;
     markers[1].ns = ns;
-    markers[1].id = id + 1;
+    markers[1].id = id + 1 ;
+
+    p.rotate(Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitY()));
+    markers[2].pose = p;
+    markers[2].shape = Arrow{ 0.1, 0.015 };
+    markers[2].color = Color{ 0.0f, 0.0f, 1.0f, 0.7f };
+    markers[2].frame_id = frame_id;
+    markers[2].ns = ns;
+    markers[2].id = id + 2;
+
+    // TODO: Don't know what is it for
+    markers[3].pose = pose;
+    markers[3].shape = Ellipse{ 0.07, 0.07, 0.1 };
+    markers[3].color = Color{ 0.0f, 0.7f, 0.6f, 0.7f };
+    markers[3].frame_id = frame_id;
+    markers[3].ns = ns;
+    markers[3].id = id + 3;
 
     return markers;
 }

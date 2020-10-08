@@ -231,6 +231,7 @@ Extension* MultiBfsHeuristic::getExtension(size_t class_code)
 
 int MultiBfsHeuristic::GetGoalHeuristic(int state_id)
 {
+    SMPL_ERROR("CALL GETGOAL HEURISTIC");
     if (!m_pp) {
         return 0;
     }
@@ -242,9 +243,13 @@ int MultiBfsHeuristic::GetGoalHeuristic(int state_id)
 
     Eigen::Vector3i dp;
     grid()->worldToGrid(p.x(), p.y(), p.z(), dp.x(), dp.y(), dp.z());
-    return getBfsCostToGoal(*m_ee_bfs, dp.x(), dp.y(), dp.z());
+    return (int)(getBfsCostToGoal(*m_ee_bfs, dp.x(), dp.y(), dp.z()) * m_grid->resolution() * 10);
 }
 
+int MultiBfsHeuristic::GetGoalHeuristic(int state_id, int planning_group){
+    bool use_ee = planning_group == GroupType::ARM;
+    return GetGoalHeuristic(state_id, use_ee);
+}
 
 int MultiBfsHeuristic::GetGoalHeuristic(int state_id, bool use_ee)
 {
@@ -281,24 +286,24 @@ int MultiBfsHeuristic::GetGoalHeuristic(int state_id, bool use_ee)
     SMPL_DEBUG_STREAM("get heursitic for grid point "<<dp.x()<<","<<dp.y()<<","<<dp.z());
     SMPL_DEBUG_STREAM("get heursitic for world point "<<p.x()<<","<<p.y()<<","<<p.z());
     
-   double cost = use_ee ? getBfsCostToGoal(*m_ee_bfs, dp.x(), dp.y(), dp.z()) 
-                        : getBfsCostToGoal(*m_base_bfs, dp.x(), dp.y(), dp.z());
-
+    double ee_cost = 0, base_cost = 0;
    
-    if (!m_pp->projectToPoint(planningSpace()->getStartStateID(), p)) {
-        return 0.0;
+    if(use_ee)
+    {
+        ee_cost = getBfsCostToGoal(*m_ee_bfs, dp.x(), dp.y(), dp.z()) * m_grid->resolution() * 10;
     }
+    else // base
+    {
+        base_cost = getBfsCostToGoal(*m_base_bfs, dp.x(), dp.y(), dp.z()) * m_grid->resolution() * 10;
+    }
+    
+    // Dina implemented here some clearance penalty
 
-    int sx, sy, sz;
-    grid()->worldToGrid(p.x(), p.y(), p.z(), sx, sy, sz);
-
-// Dina implemented here some clearance penalty
-
-SMPL_INFO_STREAM("Total final heuristic Cost is "<<cost);
-//std::getchar();
-SMPL_INFO_STREAM("====================================================================");
-        
-   return cost;
+    SMPL_INFO_STREAM("Total final heuristic Cost is "<< ee_cost + base_cost);
+    //std::getchar();
+    SMPL_INFO_STREAM("====================================================================");
+            
+   return (int)(ee_cost + base_cost);
 }
 
 int MultiBfsHeuristic::GetStartHeuristic(int state_id)

@@ -55,7 +55,6 @@
 #include <smpl/graph/action_space.h>
 
 namespace smpl {
-
 class RobotHeuristic;
 
 typedef std::vector<int> RobotCoord;
@@ -76,7 +75,6 @@ bool operator==(const ManipLatticeState& a, const ManipLatticeState& b)
 } // namespace smpl
 
 namespace std {
-
 template <>
 struct hash<smpl::ManipLatticeState>
 {
@@ -88,7 +86,6 @@ struct hash<smpl::ManipLatticeState>
 } // namespace std
 
 namespace smpl {
-
 /// \class Discrete space constructed by expliciting discretizing each joint
 class ManipLattice :
     public RobotPlanningSpace,
@@ -147,6 +144,9 @@ public:
     bool extractPath(
         const std::vector<int>& ids,
         std::vector<RobotState>& path) override;
+    //TODO dual: Workaround to make it work fast. I don't want to recompute goal state twice,
+    // plus its better to have multiple goals for the second search.
+    bool extractPathDual(const std::vector<int>& ids, std::vector<RobotState>& path_without_goal, std::vector<RobotState>&goals) override;
     ///@}
 
     /// \name Required Public Functions from Extension
@@ -178,11 +178,23 @@ public:
         int group) override;
     ///@}
 
+  // PARTIAL PATH MP
+  //TODO dual: workaround to make it work fast
+  bool initPartialPathMP(const std::vector<RobotState>& path, const std::vector<RobotState>& goals);
+
+  auto getStateVisualization(const RobotState& vars, const std::string& ns,
+                             const visual::Color& color = visual::Color(0, 0, 1, 0.8)) -> std::vector<visual::Marker>;
+
+  auto getStateVisualizationByGroup(const RobotState& vars, const std::string& ns, int group)
+      -> std::vector<visual::Marker>;
+
+  void coordToState(const RobotCoord& coord, RobotState& state) const;
+
 protected:
 
     /// \name discretization methods
     ///@{
-    void coordToState(const RobotCoord& coord, RobotState& state) const;
+    // void coordToState(const RobotCoord& coord, RobotState& state) const;
     void stateToCoord(const RobotState& state, RobotCoord& coord) const;
     ///@}
 
@@ -210,14 +222,7 @@ protected:
 
     bool isGoal(const RobotState& state);
 
-    auto getStateVisualization(const RobotState& vars, const std::string& ns)
-        -> std::vector<visual::Marker>;
-    
-    auto getStateVisualizationByGroup(const RobotState& vars, const std::string& ns, int group)
-        -> std::vector<visual::Marker>;
-
 private:
-
     ForwardKinematicsInterface* m_fk_iface = nullptr;
     ActionSpace* m_actions = nullptr;
 
@@ -233,6 +238,8 @@ private:
     int m_goal_state_id = -1;
     int m_start_state_id = -1;
 
+    std::vector<int> m_goal_succs;
+
     // maps from coords to stateID
     typedef ManipLatticeState StateKey;
     typedef PointerValueHash<StateKey> StateHash;
@@ -241,6 +248,18 @@ private:
 
     // maps from stateID to coords
     std::vector<ManipLatticeState*> m_states;
+
+    // Generate Successor MP efficiently
+    // Save the partial generated path. Each new state saves its
+    // partial graph index so generating a succ mp is [idx+1] - [idx].
+    // Partial graph must have all joints. Those which were not active
+    // will always keep its value so its motion will always be zero
+    // When getSuccs generate a successor mp, its id increases by 1
+    // TODO: Multiple successors mp
+    std::vector<std::vector<RobotState>> m_partial_previous_path;
+    // maps from stateID to partial_path. Must be updated on getSuccs
+    std::vector<int> m_states_to_partial_path;
+    bool m_use_succs_mp = false;
 
     std::string m_viz_frame_id;
 

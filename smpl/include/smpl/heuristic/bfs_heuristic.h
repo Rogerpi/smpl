@@ -58,8 +58,8 @@ public:
 
     auto grid() const -> const OccupancyGrid* { return m_grid; }
 
-    auto getWallsVisualization() const -> visual::Marker;
-    auto getValuesVisualization() -> visual::Marker;
+    auto getWallsVisualization(const std::string& label = "bfs_walls") const -> visual::Marker;
+    auto getValuesVisualization(const std::string& label = "bfs_values") -> visual::Marker;
 
     /// \name Required Public Functions from RobotHeuristic
     ///@{
