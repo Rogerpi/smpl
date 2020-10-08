@@ -53,11 +53,12 @@ struct MotionPrimitive
         SNAP_TO_RPY,
         SNAP_TO_XYZ,
         SNAP_TO_XYZ_RPY,
+        SUCCESSOR,
         NUMBER_OF_MPRIM_TYPES
     };
 
     Type type;
-    Action action;
+    Action action; //Sequence? (usually 1) of steps
     GroupType group;
     double weight;
 
@@ -76,6 +77,8 @@ inline auto to_cstring(MotionPrimitive::Type type) -> const char* {
         return "SNAP_TO_XYZ_RPY";
     case MotionPrimitive::SHORT_DISTANCE:
         return "SHORT_DISTANCE";
+    case MotionPrimitive::SUCCESSOR:
+        return "SUCCESSOR";
     default:
         assert(0);
         return "";

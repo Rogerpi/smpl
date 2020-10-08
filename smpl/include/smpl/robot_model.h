@@ -157,6 +157,12 @@ public:
         RobotState& solution) = 0;
 };
 
+class MultiTipRobotInterface : public virtual RobotModel
+{
+public:
+    virtual bool setPlanningLink(const std::string& name) = 0;
+};
+
 /// \brief Convenience class allowing a component to implement all root
 ///     interface methods via an existing extension
 class RobotModelChild : public virtual RobotModel
