@@ -171,6 +171,7 @@ set(SMPL_LIBRARY_SOURCES
     src/search/smhastar.cpp
     src/search/awastar.cpp
     src/search/marastar.cpp
+    src/search/dual_arm_planner.cpp
     src/steer/steer.cpp
     src/unicycle/dubins.cpp
     src/unicycle/unicycle.cpp)

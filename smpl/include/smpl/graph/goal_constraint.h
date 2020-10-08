@@ -46,6 +46,7 @@ struct GoalConstraint
     void* check_goal_user = NULL;
 
     GoalType type;                      // type of goal constraint
+    std::string name;
 };
 
 } // namespace smpl

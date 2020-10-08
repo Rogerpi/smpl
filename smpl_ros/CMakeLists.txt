@@ -60,6 +60,7 @@ add_library(
     src/debug/marker_conversions.cpp
     src/ros/factories.cpp
     src/ros/planner_interface.cpp
+    src/ros/dual_planner_interface.cpp
     src/ros/propagation_distance_field.cpp)
 
 target_link_libraries(smpl_ros ${Boost_LIBRARIES})

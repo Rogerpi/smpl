@@ -26,6 +26,7 @@
 #include <smpl/search/arastar.h>
 #include <smpl/search/awastar.h>
 #include <smpl/search/experience_graph_planner.h>
+#include <smpl/search/dual_arm_planner.h>
 #include <smpl/stl/memory.h>
 
 namespace smpl {
@@ -114,6 +115,10 @@ auto MakeManipLattice(
     const OccupancyGrid* grid)
     -> std::unique_ptr<RobotPlanningSpace>
 {
+
+    ///params.print();
+    ///SMPL_INFO_STREAM("FINISHED PRINTING");
+    ///std::getchar();
     ////////////////
     // Parameters //
     ////////////////
@@ -864,6 +869,35 @@ auto MakePADAStar(
     tparams.tracking.max_allowed_time = clock::duration::zero();
 
     search->set_time_parameters(tparams);
+
+    return std::move(search);
+}
+
+auto MakeDualPlanner(
+    SBPLPlanner* planner_first,
+    RobotHeuristic* heuristic_first,
+    RobotPlanningSpace* space_first,
+    SBPLPlanner* planner_dual,
+    RobotHeuristic* heuristic_dual,
+    RobotPlanningSpace* space_dual,
+    const PlanningParams& params) 
+    -> std::unique_ptr<SBPLPlanner>
+{
+    //space[0]->robot()->getExtension<MultiTipRobotInterface>()->setPlanningLink("eca_link4");
+    SMPL_INFO_STREAM("ROBOT1 " << space_first->robot() << " ROBOT 2 " << space_dual->robot());
+
+    SMPL_INFO("Before create");
+    auto search = std::unique_ptr<DualArmPlanner>(
+        new DualArmPlanner(planner_first, heuristic_first, space_first,
+                           planner_dual, heuristic_dual, space_dual));
+    SMPL_INFO("After create");
+    double epsilon;
+    params.param("epsilon", epsilon, 1.0);
+    search->set_initialsolution_eps(epsilon);
+
+    bool search_mode;
+    params.param("search_mode", search_mode, false);
+    search->set_search_mode(search_mode);
 
     return std::move(search);
 }

@@ -3,6 +3,7 @@
 
 // standard includes
 #include <memory>
+#include <vector>
 #include <string>
 
 class SBPLPlanner;
@@ -154,6 +155,16 @@ auto MakePADAStar(
     RobotPlanningSpace* space,
     RobotHeuristic* heuristic,
     const PlanningParams& params)
+    -> std::unique_ptr<SBPLPlanner>;
+
+auto MakeDualPlanner(
+    SBPLPlanner* planner_first,
+    RobotHeuristic* heuristic_first,
+    RobotPlanningSpace* space_first,
+    SBPLPlanner* planner_dual,
+    RobotHeuristic* heuristic_dual,
+    RobotPlanningSpace* space_dual,
+    const PlanningParams& params)  
     -> std::unique_ptr<SBPLPlanner>;
 
 } // namespace smpl

@@ -155,6 +155,31 @@ target_link_libraries(
     ${catkin_LIBRARIES}
     smpl::smpl)
 
+###########################################
+# Build moveit_sbpl_dualplanner_plugin plugin #
+###########################################
+
+add_library(
+    moveit_sbpl_dualplanner_plugin
+    src/planner/planner_family_manager.cpp
+    src/planner/sbpl_dualplanner_manager.cpp
+    src/planner/sbpl_dualplanning_context.cpp
+    src/planner/moveit_collision_checker.cpp)
+
+target_compile_definitions(
+    moveit_sbpl_dualplanner_plugin
+    PRIVATE
+    -DCOLLISION_DETECTION_SBPL_ROS_VERSION=${COLLISION_DETECTION_SBPL_ROS_VERSION})
+
+target_include_directories(moveit_sbpl_dualplanner_plugin PRIVATE src)
+
+target_link_libraries(
+    moveit_sbpl_dualplanner_plugin
+    collision_detection_sbpl
+    smpl_moveit_robot_model
+    ${catkin_LIBRARIES}
+    smpl::smpl)
+
 ###########
 # Install #
 ###########
@@ -171,11 +196,20 @@ install(
         move_group_command_panel_plugin_description.xml
     DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
+
+install(
+    FILES
+        sbpl_interface_plugin_description_dual.xml
+        collision_detection_sbpl_plugin_description.xml
+        move_group_command_panel_plugin_description.xml
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
 install(
     TARGETS
         smpl_moveit_robot_model
         collision_detection_sbpl
         moveit_sbpl_planner_plugin
+        moveit_sbpl_dualplanner_plugin
         move_group_command_panel_plugin
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

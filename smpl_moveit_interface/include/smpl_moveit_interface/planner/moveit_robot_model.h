@@ -53,7 +53,9 @@ class MoveItRobotModel :
     public virtual smpl::RobotModel,
     public virtual smpl::ForwardKinematicsInterface,
     public virtual smpl::InverseKinematicsInterface,
-    public virtual smpl::RedundantManipulatorInterface
+    public virtual smpl::RedundantManipulatorInterface,
+    public virtual smpl::MultiTipRobotInterface
+    //TODO Multitip might be ineficient due to text parsing
 {
 public:
 
@@ -85,7 +87,7 @@ public:
     auto variableMaxLimits() const -> const std::vector<double>&;
     auto variableContinuous() const -> const std::vector<bool>&;
 
-    bool setPlanningLink(const std::string& name);
+    bool setPlanningLink(const std::string& name) override; // MultiTipRobotInterface
     auto planningLink() const -> const moveit::core::LinkModel*;
 
     bool setPlanningFrame(const std::string& planning_frame);

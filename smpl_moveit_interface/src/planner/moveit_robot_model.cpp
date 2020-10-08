@@ -786,11 +786,12 @@ bool MoveItRobotModel::computeUnrestrictedIK(
     auto timeout = 0.0;
     moveit::core::GroupStateValidityCallbackFn fn;
     kinematics::KinematicsQueryOptions ops;
+    //ops.return_approximate_solution = true;
     ops.lock_redundant_joints = lock_redundant_joints;
     std::vector<double> consistency_limits;
     #warning Consistency limits hardcoded for Girona500
-    consistency_limits.resize(8, 6.0);
-    consistency_limits[3] = 0.5;
+    //consistency_limits.resize(8, 6.0);
+    //consistency_limits[3] = 0.5;
     if (!m_robot_state->setFromIK(
             m_ik_group,
             T_model_link,
