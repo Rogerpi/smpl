@@ -294,6 +294,7 @@ void ManipLattice::GetSuccs(
                     ///std::getchar();
                     ///std::getchar();
                 }
+                auto keep_pose = m_fk_iface->computeFK(parent_entry->state);
                 for(unsigned int idx = 0; idx < sz; idx++){
                     Action new_act;
                     new_act.resize(1);
@@ -304,10 +305,20 @@ void ManipLattice::GetSuccs(
                     actions.push_back(new_act);
                     weights.push_back(0); //TODO
                     is_partial_path_succ_action.push_back(true);
+
+                    std::vector<Action> keep_actions;
+                    m_actions->applyCombinedStaticMP(new_act[0], keep_pose, keep_actions);
+                    for (auto & n : keep_actions){
+                        actions.push_back(n);
+                        weights.push_back(0.5);
+                        is_partial_path_succ_action.push_back(true);
+                        SMPL_INFO(" USING KEEP ACTION");
+                    }
                 }
             }
-        }
+        }     
     }
+
     // mp succs done
 
     SMPL_DEBUG_NAMED(G_EXPANSIONS_LOG, "  actions: %zu", actions.size());

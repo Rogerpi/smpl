@@ -105,6 +105,8 @@ public:
     ///@{
     bool apply(const RobotState& parent, std::vector<Action>& actions) override;
     bool apply(const RobotState& parent, std::vector<Action>& actions, ActionsWeight& weights, int group);
+    bool applyCombinedStaticMP(const RobotState& parent, const smpl::Affine3& pose, std::vector<Action>& actions, ActionsWeight& weights, int group = -1);
+    bool applyCombinedStaticMP(const RobotState& parent, const smpl::Affine3& pose, std::vector<Action>& actions, int group = -1);
     ///@}
 
 protected:

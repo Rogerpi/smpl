@@ -445,6 +445,34 @@ bool ManipLatticeActionSpace::apply(
     return true;
 }
 
+bool ManipLatticeActionSpace::applyCombinedStaticMP(const RobotState& parent, const smpl::Affine3& pose, std::vector<Action>& actions, int group){
+    if(computeIkAction(
+                    parent,
+                    pose,
+                    0, // Not used
+                    ik_option::UNRESTRICTED,
+                    actions)){
+                        SMPL_INFO("IK STATIC WORK");
+                        return true;
+                    }
+                    else{
+                        SMPL_INFO("IK STATIC DOES NOT WORK");
+                        return false;
+                    }
+}
+
+bool ManipLatticeActionSpace::applyCombinedStaticMP(const RobotState& parent, const smpl::Affine3& pose, std::vector<Action>& actions, ActionsWeight& weights, int group){
+    std::vector<Action> new_actions;
+    if(applyCombinedStaticMP(parent, pose, new_actions, group)){
+        for(auto & n : new_actions){
+            actions.push_back(n);
+            weights.push_back(0.5); // Roger TODO
+        }
+        return true;
+    }
+    return false;
+}
+
 bool ManipLatticeActionSpace::getAction(
     const RobotState& parent,
     double goal_dist,

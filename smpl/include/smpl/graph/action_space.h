@@ -34,6 +34,7 @@
 
 // project includes
 #include <smpl/types.h>
+#include <smpl/spatial.h> // DUAL WORKAROUND
 
 namespace smpl {
 
@@ -68,6 +69,10 @@ public:
     /// source state. The motion between waypoints will be checked via the set
     /// CollisionChecker's isStateToStateValid function during a search.
     virtual bool apply(const RobotState& parent, std::vector<Action>& actions, ActionsWeight& weights, int group) = 0;
+
+    // DUAL WORKAROUND
+    virtual bool applyCombinedStaticMP(const RobotState& parent, const smpl::Affine3& pose, std::vector<Action>& actions, ActionsWeight& weights, int group = -1){ return false; }
+    virtual bool applyCombinedStaticMP(const RobotState& parent, const smpl::Affine3& pose, std::vector<Action>& actions, int group = -1) { return false; }
 
 
     virtual void updateStart(const RobotState& state) { }
